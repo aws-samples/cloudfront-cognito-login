@@ -5,6 +5,10 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 
+import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
+import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import { OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront';
+
 
 export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -105,6 +109,26 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
     //     cognitoDomainName: userPoolDomain.domainName
     //   }
     // })
+
+    // ------------------- Static chat app site cdk start -------------------
+    // const staticSiteBucket = new Bucket(this, 'staticSiteBucket', {
+    //   versioned: true,
+    //   encryption: BucketEncryption.S3_MANAGED,
+    //   bucketName: 'ab3-static-chat-site',
+    //   websiteIndexDocument: 'index.html',
+    //   blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+    // });
+
+    // new BucketDeployment(this, 'DeployWebsite', {
+    //   sources: [Source.asset('ab3-static-site/dist')],
+    //   destinationBucket: staticSiteBucket
+    // });
+
+    // const oia = new OriginAccessIdentity(this, 'OIA', {
+    //   comment: "Created by CDK for AB3 static site"
+    // });
+    // staticSiteBucket.grantRead(oia);
+    // ------------------- Static chat app site cdk end -------------------
 
     // new cloudfront.Distribution(this,'testDist',{
     //   defaultBehavior: {

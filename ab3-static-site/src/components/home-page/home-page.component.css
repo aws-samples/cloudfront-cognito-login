@@ -1,0 +1,20 @@
+body {
+    display: block;
+    max-width: 100%;
+    text-align: center;
+}
+.side-by-side-container {
+    display: grid;
+    grid-template-columns: 45% 45%;
+    max-width: 90%;
+    margin: 0 auto;
+}
+
+.left {
+    grid-row: 1;
+    grid-column: 1;
+}
+.Right {
+    grid-row: 1;
+    grid-column: 2;
+}

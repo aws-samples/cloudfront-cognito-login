@@ -1,0 +1,16 @@
+<body>
+    <div class="side-by-side-container">
+
+        <!-- NG if to toggle based on premium -->
+        <div class="left">
+            <h2>Regular Content</h2>
+            <p>If you are seeing this, the authenticated user has regular content. <br>
+            This is based off their Cognito User Groups</p>
+        </div>
+        <div class="Right" *ngIf="isPremium">
+            <h2>Premium Content</h2>
+            <p>If you are seeing this, the authenticated user has premium content. <br>
+                This is based off their Cognito User Groups</p>
+        </div>
+    </div>
+</body>
