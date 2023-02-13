@@ -5,7 +5,7 @@ import * as pipelines from "aws-cdk-lib/pipelines";
 import * as codecommit from "aws-cdk-lib/aws-codecommit";
 
 import { Construct } from 'constructs';
-import { InfrastructureStack } from './InfrastructureStack';
+import { SampleCloudfrontCognitoStackStack } from './InfrastructureStack';
 
 export class PipelineStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -20,7 +20,7 @@ export class PipelineStack extends Stack {
     const pipeline = new pipelines.CodePipeline(this, "AB3Pipeline", {
       pipelineName: "AB3Pipeline",
       synth: new pipelines.CodeBuildStep("CodeBuildSynth", {
-        input: pipelines.CodePipelineSource.codeCommit(repo, "master"),
+        input: pipelines.CodePipelineSource.codeCommit(repo, "main"),
         installCommands: [
           "npm install -g aws-cdk",
           "npm install",
@@ -45,6 +45,6 @@ class PipelineStage extends cdk.Stage {
   constructor(scope: Construct, id: string, props?: cdk.StageProps) {
     super(scope, id, props);
 
-    new InfrastructureStack(this, "InfrastructureStack");
+    new SampleCloudfrontCognitoStackStack(this, "InfrastructureStack");
   }
 }
