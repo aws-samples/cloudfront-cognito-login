@@ -16,7 +16,7 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
     super(scope, id, props);
 
     const userPool = new cognito.UserPool(this,'userpool',{
-      userPoolName: 'test-user-pool',
+      userPoolName: 'chatnonymous-user-pool',
       selfSignUpEnabled: true,
       signInAliases: {
         email:true,
@@ -46,7 +46,7 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
 
     const userPoolDomain = userPool.addDomain('hostedDomain',{
       cognitoDomain:{
-        domainPrefix:'chatnonymus',
+        domainPrefix:'chatnonymous',
       }
     });
 
