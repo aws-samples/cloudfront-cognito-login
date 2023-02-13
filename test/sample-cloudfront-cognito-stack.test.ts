@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template, Match } from 'aws-cdk-lib/assertions';
-import * as SampleCloudfrontCognitoStack from '../lib/sample-cloudfront-cognito-stack-stack';
+import * as SampleCloudfrontCognitoStack from '../lib/InfrastructureStack';
 
 test('SQS Queue and SNS Topic Created', () => {
   const app = new cdk.App();

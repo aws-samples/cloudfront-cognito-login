@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { SampleCloudfrontCognitoStackStack } from '../lib/sample-cloudfront-cognito-stack-stack';
+import { PipelineStack } from '../lib/PipelineStack';
 
 const app = new cdk.App();
-new SampleCloudfrontCognitoStackStack(app, 'SampleCloudfrontCognitoStackStack',{
-    env: {
+new PipelineStack(app, 'PipelineStack',{
+    env:{
+        account: '272525670255',
         region: 'us-east-1'
     }
+    
 });
