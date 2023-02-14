@@ -80,7 +80,7 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
       userPoolId: userPool.userPoolId,
     
       // the properties below are optional
-      description: 'description',
+      description: 'This is a group for all the premium users.',
       groupName: groupName,
     });
 
