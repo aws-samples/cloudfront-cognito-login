@@ -7,6 +7,5 @@ new PipelineStack(app, 'PipelineStack',{
     env:{
         account: '272525670255',
         region: 'us-east-1'
-    }
-    
+    }    
 });

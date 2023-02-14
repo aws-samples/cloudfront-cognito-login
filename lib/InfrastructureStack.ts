@@ -11,7 +11,7 @@ import { OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront';
 import * as secretsManager from 'aws-cdk-lib/aws-secretsmanager';
 
 
-export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
+export class InfrastructureStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -81,32 +81,26 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
 
   //   new cdk.CfnOutput(this, 'userPoolId', {
   //     value: userPool.userPoolId,
-  //   });
   //   new cdk.CfnOutput(this, 'userPoolClientId', {
   //     value: userPoolClient.userPoolClientId,
   //   });
 
-  //   const viewerRequest = new cloudfront.experimental.EdgeFunction(this,'viewerRequest',{
-  //     runtime: lambda.Runtime.NODEJS_16_X,
-  //     handler: 'viewerRequest.handler',
-  //     code: lambda.Code.fromAsset('lambda'),
-  //     environment: {
-  //       cognitoUserPoolId : userPool.userPoolId,
-  //       cognitoClientId: userPoolClient.userPoolClientId,
-  //       cognitoDomainName: userPoolDomain.domainName
-  //     }
-  //   })
+    // const viewerRequest = new cloudfront.experimental.EdgeFunction(this,'viewerRequest',{
+    //   runtime: lambda.Runtime.NODEJS_16_X,
+    //   handler: 'viewerRequest.handler',
+    //   code: lambda.Code.fromAsset('lambda'),
+    //   environment: {
+    //     cognitoUserPoolId : userPool.userPoolId,
+    //     cognitoClientId: userPoolClient.userPoolClientId,
+    //     cognitoDomainName: userPoolDomain.domainName
+    //   }
+    // })
 
-  //   const originRequest = new cloudfront.experimental.EdgeFunction(this,'originRequest',{
-  //     runtime: lambda.Runtime.NODEJS_16_X,
-  //     handler: 'originRequest.handler',
-  //     code: lambda.Code.fromAsset('lambda'),
-  //     environment: {
-  //       cognitoClientSecret : userPoolClient.userPoolClientSecret.unsafeUnwrap(),
-  //       cognitoClientId: userPoolClient.userPoolClientId,
-  //       cognitoDomainName: userPoolDomain.domainName
-  //     }
-  //   })
+    const originRequest = new cloudfront.experimental.EdgeFunction(this,'originRequest',{
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'originRequest.handler',
+      code: lambda.Code.fromAsset('lambda'),
+    })
 
   //   // ------------------- Static chat app site cdk start -------------------
   //   const staticSiteBucket = new Bucket(this, 'staticSiteBucket', {
