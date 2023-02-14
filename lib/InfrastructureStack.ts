@@ -4,6 +4,8 @@ import { Duration } from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
@@ -78,6 +80,40 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
       accessTokenValidity: Duration.days(1),
       idTokenValidity: Duration.days(1)
     });
+
+    // TODO create iam role of the premuim user
+    const cfnUserPoolGroup = new cognito.CfnUserPoolGroup(this, 'premiumGroup', {
+      userPoolId: userPool.userPoolId,
+    
+      // the properties below are optional
+      description: 'description',
+      groupName: 'premium',
+      // roleArn: 'roleArn',
+    });
+
+    const addPremiumUserFunction = new lambda.Function(this, 'NewFunction', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'addPremiumUser.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      // role: myRole, // user-provided role
+    });
+    
+    // Create policy to add user to a group
+    const addToCognitoGroupPolicy = new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminAddUserToGroup'],
+      resources: [userPool.userPoolArn],
+    });
+
+    // 👇 add the policy to the Function's role
+    addPremiumUserFunction.role?.attachInlinePolicy(
+      new iam.Policy(this, 'add-to-group-policy', {
+        statements: [addToCognitoGroupPolicy],
+      }),
+    );
+    new apigw.LambdaRestApi(this, 'Endpoint', {
+      handler: addPremiumUserFunction
+    });
+
 
   //   new cdk.CfnOutput(this, 'userPoolId', {
   //     value: userPool.userPoolId,
