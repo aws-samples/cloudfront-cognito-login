@@ -85,16 +85,11 @@ export class InfrastructureStack extends cdk.Stack {
   //     value: userPoolClient.userPoolClientId,
   //   });
 
-    // const viewerRequest = new cloudfront.experimental.EdgeFunction(this,'viewerRequest',{
-    //   runtime: lambda.Runtime.NODEJS_16_X,
-    //   handler: 'viewerRequest.handler',
-    //   code: lambda.Code.fromAsset('lambda'),
-    //   environment: {
-    //     cognitoUserPoolId : userPool.userPoolId,
-    //     cognitoClientId: userPoolClient.userPoolClientId,
-    //     cognitoDomainName: userPoolDomain.domainName
-    //   }
-    // })
+    const viewerRequest = new cloudfront.experimental.EdgeFunction(this,'viewerRequest',{
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'viewerRequest.handler',
+      code: lambda.Code.fromAsset('lambda'),
+    })
 
     const originRequest = new cloudfront.experimental.EdgeFunction(this,'originRequest',{
       runtime: lambda.Runtime.NODEJS_16_X,
@@ -102,45 +97,45 @@ export class InfrastructureStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda'),
     })
 
-  //   // ------------------- Static chat app site cdk start -------------------
-  //   const staticSiteBucket = new Bucket(this, 'staticSiteBucket', {
-  //     versioned: true,
-  //     encryption: BucketEncryption.S3_MANAGED,
-  //     bucketName: 'ab3-static-chat-site',
-  //     websiteIndexDocument: 'index.html',
-  //     blockPublicAccess: BlockPublicAccess.BLOCK_ALL
-  //   });
+    // ------------------- Static chat app site cdk start -------------------
+    const staticSiteBucket = new Bucket(this, 'staticSiteBucket', {
+      versioned: true,
+      encryption: BucketEncryption.S3_MANAGED,
+      bucketName: 'ab3-static-chat-site',
+      websiteIndexDocument: 'index.html',
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+    });
 
-  //   new BucketDeployment(this, 'DeployWebsite', {
-  //     sources: [Source.asset('ab3-static-site/dist')],
-  //     destinationBucket: staticSiteBucket
-  //   });
+    new BucketDeployment(this, 'DeployWebsite', {
+      sources: [Source.asset('ab3-static-site/dist')],
+      destinationBucket: staticSiteBucket
+    });
 
-  //   const oia = new OriginAccessIdentity(this, 'OIA', {
-  //     comment: "Created by CDK for AB3 static site"
-  //   });
-  //   staticSiteBucket.grantRead(oia);
-  //   // ------------------- Static chat app site cdk end -------------------
+    const oia = new OriginAccessIdentity(this, 'OIA', {
+      comment: "Created by CDK for AB3 static site"
+    });
+    staticSiteBucket.grantRead(oia);
+    // ------------------- Static chat app site cdk end -------------------
 
-  //  new secretsManager.Secret(this,'CognitoSecrets',{
-  //   secretName: 'cognitoClientSecret'
-  //  })
+   new secretsManager.Secret(this,'CognitoSecrets',{
+    secretName: 'cognitoClientSecret'
+   })
 
-  //   new cloudfront.Distribution(this,'testDist',{
-  //     defaultBehavior: {
-  //       origin: new cdk.aws_cloudfront_origins.HttpOrigin('www.example.com'),
-  //       edgeLambdas: [
-  //         {
-  //           functionVersion: viewerRequest.currentVersion,
-  //           eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST
-  //         },
-  //         {
-  //           functionVersion: originRequest.currentVersion,
-  //           eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST
-  //         }
-  //       ]
-  //     }
-  //   })
+    new cloudfront.Distribution(this,'testDist',{
+      defaultBehavior: {
+        origin: new cdk.aws_cloudfront_origins.HttpOrigin('www.example.com'),
+        edgeLambdas: [
+          {
+            functionVersion: viewerRequest.currentVersion,
+            eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST
+          },
+          {
+            functionVersion: originRequest.currentVersion,
+            eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST
+          }
+        ]
+      }
+    })
 
 
 
