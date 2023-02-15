@@ -4,6 +4,8 @@ import { Duration } from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
@@ -39,9 +41,6 @@ export class InfrastructureStack extends cdk.Stack {
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
-    
-
-
     }); 
 
     const userPoolDomain = userPool.addDomain('hostedDomain',{
@@ -50,16 +49,12 @@ export class InfrastructureStack extends cdk.Stack {
       }
     });
 
-  
-
     const standardCognitoAttributes = {
       givenName: true,
       familyName: true,
       email: true,
       emailVerified: true
     }
-
-  
 
     const userPoolClient = userPool.addClient('Client',{
       oAuth: {
@@ -78,6 +73,46 @@ export class InfrastructureStack extends cdk.Stack {
       accessTokenValidity: Duration.days(1),
       idTokenValidity: Duration.days(1)
     });
+
+    // Create Premium group
+    const groupName = 'premium'
+    const cfnUserPoolGroup = new cognito.CfnUserPoolGroup(this, 'premiumGroup', {
+      userPoolId: userPool.userPoolId,
+    
+      // the properties below are optional
+      description: 'This is a group for all the premium users.',
+      groupName: groupName,
+    });
+
+    // Add Lambda function that will add user to the premium group
+    const addPremiumUserFunction = new lambda.Function(this, 'addPremiumUserFunction', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'addPremiumUser.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment: {
+        cognitoUserPoolId : userPool.userPoolId,
+        premiumGroupName: groupName
+      },
+    });
+    
+    // Create policy to add user to a group
+    const addToCognitoGroupPolicy = new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminAddUserToGroup'],
+      resources: [userPool.userPoolArn],
+    });
+
+    // Attatching the made policy above to the lambda function, giving it access
+    addPremiumUserFunction.role?.attachInlinePolicy(
+      new iam.Policy(this, 'add-to-group-policy', {
+        statements: [addToCognitoGroupPolicy],
+      }),
+    );
+
+    // Create api gateway with the lambda function as the endpoint
+    new apigw.LambdaRestApi(this, 'AddUserToPremiumEndpoint', {
+      handler: addPremiumUserFunction
+    });
+
 
   //   new cdk.CfnOutput(this, 'userPoolId', {
   //     value: userPool.userPoolId,
