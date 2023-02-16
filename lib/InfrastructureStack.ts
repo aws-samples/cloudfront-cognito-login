@@ -88,7 +88,7 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
     const addPremiumUserFunction = new lambda.Function(this, 'addPremiumUserFunction', {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'addPremiumUser.handler',
-      code: lambda.Code.fromAsset('lambda'),
+      code: lambda.Code.fromAsset('lambdas/premium_endpoint'),
       environment: {
         cognitoUserPoolId : userPool.userPoolId,
         premiumGroupName: groupName
