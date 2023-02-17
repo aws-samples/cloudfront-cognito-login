@@ -10,12 +10,13 @@ const secretsManager = require('./secretsManager.js');
 
 
 exports.handler = async function(event) {
+  console.log("event in origin request :" + JSON.stringify(event))
   const secrets = await secretsManager.getSecrets()
   const domainName = "chatnonymous";
   const clientId = "17m9ss6j6bt93hp6hftne5ls8";
   console.log(secrets);
   const cf = event.Records[0].cf;
-  if (cf.request.uri.startsWith('/api/cognito/login/')) {
+  if (cf.request.uri.startsWith('/login')) {
     const {code} = querystring.parse(cf.request.querystring);
     const res = await axios({
       method: 'POST',
@@ -25,10 +26,10 @@ exports.handler = async function(event) {
       },
       data: querystring.stringify({
         grant_type: 'authorization_code',
-        redirect_uri: 'https://d174lp5a9lmryl.cloudfront.net',
+        redirect_uri: 'https://d174lp5a9lmryl.cloudfront.net/home',
         code
       }),
-      url: `https://${domainName}.auth.eu-west-1.amazoncognito.com/oauth2/token`,
+      url: `https://${domainName}.auth.us-east-1.amazoncognito.com/oauth2/token`,
     });
     console.log(res);
     if (res.status === 200) {
@@ -42,7 +43,7 @@ exports.handler = async function(event) {
         headers: {
           location: [{ // instructs browser to redirect after receiving the response
           	key: 'Location',
-          	value: 'www.example.com'
+          	value: 'd174lp5a9lmryl.cloudfront.net/home'
           }],
           'set-cookie': [{ // instructs browser to store a cookie
           	key: 'Set-Cookie',

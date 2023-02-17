@@ -59,11 +59,11 @@ export class InfrastructureStack extends cdk.Stack {
     const userPoolClient = userPool.addClient('Client',{
       oAuth: {
         flows: {
-          // authorizationCodeGrant: true
           authorizationCodeGrant: true
+          // implicitCodeGrant: true
         },
         scopes:[cognito.OAuthScope.EMAIL],
-        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net"]
+        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net/login"]
       },
       authFlows:{
         userPassword:true

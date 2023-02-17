@@ -27,14 +27,11 @@ async function verifyToken(cf,client_id,userPoolId){
 exports.handler = async function(event) {
     console.log("events incoming to viewers request: " + JSON.stringify(event))
     const cf = event.Records[0].cf;
-    // const secrets = secretsManagerUtil.getSecrets();
-    // check if path is protected and requires the user to be logged in
-    // try to add cookie name here to see if value is pulled
-    // check if cookie exists
-    cf.request.headers.cookie = [{cookie : "this is a dummy cookie"}]
+
     const domainName = "chatnonymous";
     const clientId = "17m9ss6j6bt93hp6hftne5ls8";
     const userPoolId = "us-east-1_yFghf2jOa";
+    if(cf.request.uri.startsWith('/home') ){
       const valid = await verifyToken(cf,clientId,userPoolId);
       console.log(valid);
       if (valid === true) {
@@ -46,11 +43,13 @@ exports.handler = async function(event) {
           headers: {
             location: [{ // instructs browser to redirect after receiving the response
               key: 'Location',
-              value: `https://${domainName}.auth.us-east-1.amazoncognito.com/login?client_id=${clientId}&response_type=code&scope=email+openid&redirect_uri=https%3A%2F%2Fd174lp5a9lmryl.cloudfront.net`,
+              value: `https://${domainName}.auth.us-east-1.amazoncognito.com/login?client_id=${clientId}&response_type=code&scope=email+openid&redirect_uri=https%3A%2F%2Fd174lp5a9lmryl.cloudfront.net/login`,
             }]
           }
         };
       }
-    // // do nothing: CloudFront continues as usual
-    // return cf.request;
+    }
+      
+    // do nothing: CloudFront continues as usual
+    return cf.request;
 }

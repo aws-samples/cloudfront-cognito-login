@@ -34,9 +34,7 @@ const name = "chatnonymousSecrets";
 const primarySecretManager = new AWS.SecretsManager({
     region: 'us-east-1',
 });
-const fallbackSecretManager = new AWS.SecretsManager({
-    region: "us-east-2",
-});
+
 
 const getSecrets = async () => {
     let secrets;
