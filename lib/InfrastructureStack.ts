@@ -59,9 +59,11 @@ export class InfrastructureStack extends cdk.Stack {
     const userPoolClient = userPool.addClient('Client',{
       oAuth: {
         flows: {
+          // authorizationCodeGrant: true
           authorizationCodeGrant: true
         },
-        scopes:[cognito.OAuthScope.EMAIL]
+        scopes:[cognito.OAuthScope.EMAIL],
+        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net"]
       },
       authFlows:{
         userPassword:true
@@ -123,13 +125,13 @@ export class InfrastructureStack extends cdk.Stack {
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this,'viewerRequest',{
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'viewerRequest.handler',
-      code: lambda.Code.fromAsset('lambda'),
+      code: lambda.Code.fromAsset('lambda/viewerRequest'),
     })
 
     const originRequest = new cloudfront.experimental.EdgeFunction(this,'originRequest',{
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'originRequest.handler',
-      code: lambda.Code.fromAsset('lambda'),
+      code: lambda.Code.fromAsset('lambda/originRequest'),
     })
 
     // ------------------- Static chat app site cdk start -------------------
@@ -152,13 +154,17 @@ export class InfrastructureStack extends cdk.Stack {
     staticSiteBucket.grantRead(oia);
     // ------------------- Static chat app site cdk end -------------------
 
-   new secretsManager.Secret(this,'CognitoSecrets',{
-    secretName: 'cognitoClientSecret'
-   })
 
-    new cloudfront.Distribution(this,'testDist',{
+   const loggingBucket = new Bucket(this, 'cloudFrontLogginBucket', {
+    versioned: true,
+    encryption: BucketEncryption.S3_MANAGED,
+    bucketName: 'chatnonymous-cloudfront-logs',
+    blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+  });
+
+    const cfDistro = new cloudfront.Distribution(this,'chatnonymous',{
       defaultBehavior: {
-        origin: new cdk.aws_cloudfront_origins.HttpOrigin('www.example.com'),
+        origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket),
         edgeLambdas: [
           {
             functionVersion: viewerRequest.currentVersion,
@@ -168,15 +174,14 @@ export class InfrastructureStack extends cdk.Stack {
             functionVersion: originRequest.currentVersion,
             eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST
           }
-        ]
-      }
+        ],
+        
+      },
+      enableLogging : true,
+      logBucket : loggingBucket,
+      logIncludesCookies : true,
+      logFilePrefix : 'cloudfront-logs'
     })
-
-
-
-    
-
-
 
   }
 }

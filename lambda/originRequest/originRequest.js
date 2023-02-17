@@ -2,7 +2,7 @@
 const querystring = require('querystring'); 
 const cookie = require('cookie');
 const axios = require('axios'); 
-const getSecrets = require('../util/secretsManager.js');
+const secretsManager = require('./secretsManager.js');
 
 
 
@@ -10,7 +10,10 @@ const getSecrets = require('../util/secretsManager.js');
 
 
 exports.handler = async function(event) {
-  const secrets = getSecrets()
+  const secrets = await secretsManager.getSecrets()
+  const domainName = "chatnonymous";
+  const clientId = "17m9ss6j6bt93hp6hftne5ls8";
+  console.log(secrets);
   const cf = event.Records[0].cf;
   if (cf.request.uri.startsWith('/api/cognito/login/')) {
     const {code} = querystring.parse(cf.request.querystring);
@@ -18,15 +21,16 @@ exports.handler = async function(event) {
       method: 'POST',
       headers: {
         'content-type': 'application/x-www-form-urlencoded',
-        authorization: 'Basic ' + Buffer.from(secrets.ClientID + ':' + secrets.ClientSecret).toString('base64')
+        authorization: 'Basic ' + Buffer.from(clientId + ':' + secrets.ClientSecret).toString('base64')
       },
       data: querystring.stringify({
         grant_type: 'authorization_code',
-        redirect_uri: 'https:www.example.com',
+        redirect_uri: 'https://d174lp5a9lmryl.cloudfront.net',
         code
       }),
-      url: `https://${secrets.DomainName}.auth.eu-west-1.amazoncognito.com/oauth2/token`,
+      url: `https://${domainName}.auth.eu-west-1.amazoncognito.com/oauth2/token`,
     });
+    console.log(res);
     if (res.status === 200) {
       const setCookieValue = cookie.serialize('token', res.data.access_token, {
         maxAge: res.data.expires_in,
@@ -38,7 +42,7 @@ exports.handler = async function(event) {
         headers: {
           location: [{ // instructs browser to redirect after receiving the response
           	key: 'Location',
-          	value: '/home'
+          	value: 'www.example.com'
           }],
           'set-cookie': [{ // instructs browser to store a cookie
           	key: 'Set-Cookie',
