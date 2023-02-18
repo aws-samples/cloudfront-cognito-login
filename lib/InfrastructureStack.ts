@@ -63,7 +63,7 @@ export class InfrastructureStack extends cdk.Stack {
           // implicitCodeGrant: true
         },
         scopes:[cognito.OAuthScope.EMAIL],
-        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net/login"]
+        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net/login","https://d174lp5a9lmryl.cloudfront.net/home"]
       },
       authFlows:{
         userPassword:true
@@ -165,6 +165,7 @@ export class InfrastructureStack extends cdk.Stack {
     const cfDistro = new cloudfront.Distribution(this,'chatnonymous',{
       defaultBehavior: {
         origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket),
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
         edgeLambdas: [
           {
             functionVersion: viewerRequest.currentVersion,

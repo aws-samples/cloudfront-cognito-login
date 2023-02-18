@@ -18,20 +18,22 @@ exports.handler = async function(event) {
   const cf = event.Records[0].cf;
   if (cf.request.uri.startsWith('/login')) {
     const {code} = querystring.parse(cf.request.querystring);
-    const res = await axios({
-      method: 'POST',
-      headers: {
-        'content-type': 'application/x-www-form-urlencoded',
-        authorization: 'Basic ' + Buffer.from(clientId + ':' + secrets.ClientSecret).toString('base64')
-      },
-      data: querystring.stringify({
-        grant_type: 'authorization_code',
-        redirect_uri: 'https://d174lp5a9lmryl.cloudfront.net/home',
-        code
-      }),
-      url: `https://${domainName}.auth.us-east-1.amazoncognito.com/oauth2/token`,
-    });
-    console.log(res);
+   
+      const res = await axios({
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          authorization: 'Basic ' + Buffer.from(clientId + ':' + secrets.ClientSecret).toString('base64')
+        },
+        data: querystring.stringify({
+          grant_type: 'authorization_code',
+          redirect_uri: 'https://d174lp5a9lmryl.cloudfront.net/login',
+          code
+        }),
+        url: `https://${domainName}.auth.us-east-1.amazoncognito.com/oauth2/token`,
+      });
+      console.log(res);
+    
     if (res.status === 200) {
       const setCookieValue = cookie.serialize('token', res.data.access_token, {
         maxAge: res.data.expires_in,
@@ -43,7 +45,7 @@ exports.handler = async function(event) {
         headers: {
           location: [{ // instructs browser to redirect after receiving the response
           	key: 'Location',
-          	value: 'd174lp5a9lmryl.cloudfront.net/home'
+          	value: '/home'
           }],
           'set-cookie': [{ // instructs browser to store a cookie
           	key: 'Set-Cookie',
