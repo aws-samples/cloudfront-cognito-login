@@ -162,10 +162,16 @@ export class InfrastructureStack extends cdk.Stack {
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL
   });
 
+
     const cfDistro = new cloudfront.Distribution(this,'chatnonymous',{
       defaultBehavior: {
-        origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket),
-        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+        origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket,{
+          originPath : '/index.html'
+        }),
+        originRequestPolicy: new cloudfront.OriginRequestPolicy(this,'queryStringOnly',{
+          queryStringBehavior : cloudfront.OriginRequestQueryStringBehavior.all(),
+          cookieBehavior : cloudfront.OriginRequestCookieBehavior.allowList("token")
+        }),
         edgeLambdas: [
           {
             functionVersion: viewerRequest.currentVersion,
@@ -181,7 +187,8 @@ export class InfrastructureStack extends cdk.Stack {
       enableLogging : true,
       logBucket : loggingBucket,
       logIncludesCookies : true,
-      logFilePrefix : 'cloudfront-logs'
+      logFilePrefix : 'cloudfront-logs',
+      defaultRootObject : 'index.html'
     })
 
   }
