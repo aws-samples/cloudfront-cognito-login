@@ -31,6 +31,7 @@ exports.handler = async function(event) {
     const domainName = "chatnonymous";
     const clientId = "17m9ss6j6bt93hp6hftne5ls8";
     const userPoolId = "us-east-1_yFghf2jOa";
+  
     if(cf.request.uri.startsWith('/index.html') ){
       const valid = await verifyToken(cf,clientId,userPoolId);
       console.log(valid);
