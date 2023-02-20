@@ -7,11 +7,10 @@ const routes: Routes = [
     path: 'home',
     component: HomePageComponent
   },
-  {
-    path: '**',
-    component: HomePageComponent
-  }
 
+  { path: '',   redirectTo: '/home', pathMatch: 'full' },
+
+  { path: '**',   redirectTo: '/home', pathMatch: 'full' }
 
 ];
 
@@ -20,3 +19,4 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class AppRoutingModule { }
+

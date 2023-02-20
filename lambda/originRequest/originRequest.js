@@ -45,7 +45,7 @@ exports.handler = async function(event) {
         headers: {
           location: [{ // instructs browser to redirect after receiving the response
           	key: 'Location',
-          	value: '/home'
+          	value: '/index.html'
           }],
           'set-cookie': [{ // instructs browser to store a cookie
           	key: 'Set-Cookie',

@@ -9,7 +9,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
-import { OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront';
+import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import * as secretsManager from 'aws-cdk-lib/aws-secretsmanager';
 
 
@@ -151,7 +151,7 @@ export class InfrastructureStack extends cdk.Stack {
     const oia = new OriginAccessIdentity(this, 'OIA', {
       comment: "Created by CDK for AB3 static site"
     });
-    staticSiteBucket.grantRead(oia);
+    // staticSiteBucket.grantRead(oia);
     // ------------------- Static chat app site cdk end -------------------
 
 
@@ -165,9 +165,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     const cfDistro = new cloudfront.Distribution(this,'chatnonymous',{
       defaultBehavior: {
-        origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket,{
-          originPath : '/index.html'
-        }),
+        origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket),
         originRequestPolicy: new cloudfront.OriginRequestPolicy(this,'queryStringOnly',{
           queryStringBehavior : cloudfront.OriginRequestQueryStringBehavior.all(),
           cookieBehavior : cloudfront.OriginRequestCookieBehavior.allowList("token")
@@ -182,7 +180,7 @@ export class InfrastructureStack extends cdk.Stack {
             eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST
           }
         ],
-        
+        viewerProtocolPolicy : ViewerProtocolPolicy.REDIRECT_TO_HTTPS
       },
       enableLogging : true,
       logBucket : loggingBucket,
