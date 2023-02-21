@@ -9,11 +9,11 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
-import { OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront';
+import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import * as secretsManager from 'aws-cdk-lib/aws-secretsmanager';
 
 
-export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
+export class InfrastructureStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -60,8 +60,10 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
       oAuth: {
         flows: {
           authorizationCodeGrant: true
+          // implicitCodeGrant: true
         },
-        scopes:[cognito.OAuthScope.EMAIL]
+        scopes:[cognito.OAuthScope.EMAIL],
+        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net/login","https://d174lp5a9lmryl.cloudfront.net/home"]
       },
       authFlows:{
         userPassword:true
@@ -116,78 +118,76 @@ export class SampleCloudfrontCognitoStackStack extends cdk.Stack {
 
   //   new cdk.CfnOutput(this, 'userPoolId', {
   //     value: userPool.userPoolId,
-  //   });
   //   new cdk.CfnOutput(this, 'userPoolClientId', {
   //     value: userPoolClient.userPoolClientId,
   //   });
 
-  //   const viewerRequest = new cloudfront.experimental.EdgeFunction(this,'viewerRequest',{
-  //     runtime: lambda.Runtime.NODEJS_16_X,
-  //     handler: 'viewerRequest.handler',
-  //     code: lambda.Code.fromAsset('lambda'),
-  //     environment: {
-  //       cognitoUserPoolId : userPool.userPoolId,
-  //       cognitoClientId: userPoolClient.userPoolClientId,
-  //       cognitoDomainName: userPoolDomain.domainName
-  //     }
-  //   })
+    const viewerRequest = new cloudfront.experimental.EdgeFunction(this,'viewerRequest',{
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'viewerRequest.handler',
+      code: lambda.Code.fromAsset('lambda/viewerRequest'),
+    })
 
-  //   const originRequest = new cloudfront.experimental.EdgeFunction(this,'originRequest',{
-  //     runtime: lambda.Runtime.NODEJS_16_X,
-  //     handler: 'originRequest.handler',
-  //     code: lambda.Code.fromAsset('lambda'),
-  //     environment: {
-  //       cognitoClientSecret : userPoolClient.userPoolClientSecret.unsafeUnwrap(),
-  //       cognitoClientId: userPoolClient.userPoolClientId,
-  //       cognitoDomainName: userPoolDomain.domainName
-  //     }
-  //   })
+    const originRequest = new cloudfront.experimental.EdgeFunction(this,'originRequest',{
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'originRequest.handler',
+      code: lambda.Code.fromAsset('lambda/originRequest'),
+    })
 
-  //   // ------------------- Static chat app site cdk start -------------------
-  //   const staticSiteBucket = new Bucket(this, 'staticSiteBucket', {
-  //     versioned: true,
-  //     encryption: BucketEncryption.S3_MANAGED,
-  //     bucketName: 'ab3-static-chat-site',
-  //     websiteIndexDocument: 'index.html',
-  //     blockPublicAccess: BlockPublicAccess.BLOCK_ALL
-  //   });
+    // ------------------- Static chat app site cdk start -------------------
+    const staticSiteBucket = new Bucket(this, 'staticSiteBucket', {
+      versioned: true,
+      encryption: BucketEncryption.S3_MANAGED,
+      bucketName: 'ab3-static-chat-site',
+      websiteIndexDocument: 'index.html',
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+    });
 
-  //   new BucketDeployment(this, 'DeployWebsite', {
-  //     sources: [Source.asset('ab3-static-site/dist')],
-  //     destinationBucket: staticSiteBucket
-  //   });
+    new BucketDeployment(this, 'DeployWebsite', {
+      sources: [Source.asset('ab3-static-site/dist')],
+      destinationBucket: staticSiteBucket
+    });
 
-  //   const oia = new OriginAccessIdentity(this, 'OIA', {
-  //     comment: "Created by CDK for AB3 static site"
-  //   });
-  //   staticSiteBucket.grantRead(oia);
-  //   // ------------------- Static chat app site cdk end -------------------
-
-  //  new secretsManager.Secret(this,'CognitoSecrets',{
-  //   secretName: 'cognitoClientSecret'
-  //  })
-
-  //   new cloudfront.Distribution(this,'testDist',{
-  //     defaultBehavior: {
-  //       origin: new cdk.aws_cloudfront_origins.HttpOrigin('www.example.com'),
-  //       edgeLambdas: [
-  //         {
-  //           functionVersion: viewerRequest.currentVersion,
-  //           eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST
-  //         },
-  //         {
-  //           functionVersion: originRequest.currentVersion,
-  //           eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST
-  //         }
-  //       ]
-  //     }
-  //   })
+    const oia = new OriginAccessIdentity(this, 'OIA', {
+      comment: "Created by CDK for AB3 static site"
+    });
+    // staticSiteBucket.grantRead(oia);
+    // ------------------- Static chat app site cdk end -------------------
 
 
+   const loggingBucket = new Bucket(this, 'cloudFrontLogginBucket', {
+    versioned: true,
+    encryption: BucketEncryption.S3_MANAGED,
+    bucketName: 'chatnonymous-cloudfront-logs',
+    blockPublicAccess: BlockPublicAccess.BLOCK_ALL
+  });
 
     
-
-
+    const cfDistro = new cloudfront.Distribution(this,'chatnonymous',{
+      defaultBehavior: {
+        origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket),
+        originRequestPolicy: new cloudfront.OriginRequestPolicy(this,'queryStringOnly',{
+          queryStringBehavior : cloudfront.OriginRequestQueryStringBehavior.all(),
+          cookieBehavior : cloudfront.OriginRequestCookieBehavior.allowList("token")
+        }),
+        edgeLambdas: [
+          {
+            functionVersion: viewerRequest.currentVersion,
+            eventType: cloudfront.LambdaEdgeEventType.VIEWER_REQUEST
+          },
+          {
+            functionVersion: originRequest.currentVersion,
+            eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST
+          }
+        ],
+        viewerProtocolPolicy : ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+      },
+      enableLogging : true,
+      logBucket : loggingBucket,
+      logIncludesCookies : true,
+      logFilePrefix : 'cloudfront-logs',
+      defaultRootObject : 'index.html'
+    })
 
   }
 }
