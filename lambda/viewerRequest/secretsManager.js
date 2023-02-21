@@ -1,10 +1,9 @@
-'use strict';
-// const { SecretsManagerClient, GetSecretValueCommand } = require("aws-sdk");
+// import { SecretsManagerClient, GetSecretValueCommand} from "@aws-sdk/client-secrets-manager";
+
 
 // async function getSecrets(){
 
 //     const secret_name = "chatnonymousSecrets";
-
 
 //     const client = new SecretsManagerClient({
 //         region: "us-east-1",
@@ -23,9 +22,11 @@
 //       }
       
 //     return response.SecretString;
+
+    
 // }
 
-// module.exports = {getSecrets}
+// module.exports = {getSecrets};
 
 const AWS = require('aws-sdk');
 
@@ -33,9 +34,7 @@ const name = "chatnonymousSecrets";
 const primarySecretManager = new AWS.SecretsManager({
     region: 'us-east-1',
 });
-const fallbackSecretManager = new AWS.SecretsManager({
-    region: "us-east-2",
-});
+
 
 const getSecrets = async () => {
     let secrets;
