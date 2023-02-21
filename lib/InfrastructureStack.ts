@@ -63,7 +63,7 @@ export class InfrastructureStack extends cdk.Stack {
           // implicitCodeGrant: true
         },
         scopes:[cognito.OAuthScope.EMAIL],
-        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net/login","https://d174lp5a9lmryl.cloudfront.net/home"]
+        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net/login","https://d174lp5a9lmryl.cloudfront.net/index.html"]
       },
       authFlows:{
         userPassword:true
