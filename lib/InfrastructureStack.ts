@@ -161,7 +161,7 @@ export class InfrastructureStack extends cdk.Stack {
           defaultAction: {
             allow: {}
           },
-          scope: 'REGIONAL',
+          scope: 'CLOUDFRONT',
           visibilityConfig: {
             cloudWatchMetricsEnabled: true,
             metricName:'MetricForWebACLCDK',
