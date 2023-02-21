@@ -145,10 +145,10 @@ export class InfrastructureStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL
     });
 
-    new BucketDeployment(this, 'DeployWebsite', {
-      sources: [Source.asset('ab3-static-site/dist')],
-      destinationBucket: staticSiteBucket
-    });
+    // new BucketDeployment(this, 'DeployWebsite', {
+    //   sources: [Source.asset('ab3-static-site/dist')],
+    //   destinationBucket: staticSiteBucket
+    // });
 
     const oia = new OriginAccessIdentity(this, 'OIA', {
       comment: "Created by CDK for AB3 static site"
