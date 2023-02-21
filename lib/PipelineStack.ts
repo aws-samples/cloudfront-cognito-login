@@ -24,13 +24,12 @@ export class PipelineStack extends Stack {
         installCommands: [
           "npm install -g aws-cdk",
           "npm install",
+          "cd ab3-static-site",
+          "npm install -g @angular/cli",
+          "npm install",
+          "ng build --configuration=production",
+          "cd .."
         ],
-//         TODO add following cmds for angular site building
-//          cd ab3-static-site
-//          npm install -g @angular/cli
-//          npm i
-//          ng build --configuration=production 
-//          cd ..
         commands: ["cdk synth"],
         primaryOutputDirectory: "cdk.out",
         buildEnvironment: {

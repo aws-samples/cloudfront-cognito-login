@@ -10,7 +10,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
-import * as secretsManager from 'aws-cdk-lib/aws-secretsmanager';
+import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 
 
 export class InfrastructureStack extends cdk.Stack {
@@ -90,7 +90,7 @@ export class InfrastructureStack extends cdk.Stack {
     const addPremiumUserFunction = new lambda.Function(this, 'addPremiumUserFunction', {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'addPremiumUser.handler',
-      code: lambda.Code.fromAsset('lambda'),
+      code: lambda.Code.fromAsset('lambdas/premium_endpoint'),
       environment: {
         cognitoUserPoolId : userPool.userPoolId,
         premiumGroupName: groupName
@@ -154,6 +154,37 @@ export class InfrastructureStack extends cdk.Stack {
     // staticSiteBucket.grantRead(oia);
     // ------------------- Static chat app site cdk end -------------------
 
+  const cfnWebACL = new wafv2.CfnWebACL(this, 'MyCDKWebAcl', {
+    
+          defaultAction: {
+            allow: {}
+          },
+          scope: 'REGIONAL',
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName:'MetricForWebACLCDK',
+            sampledRequestsEnabled: true,
+          },
+          name:'MyCDKWebAcl',
+          rules: [{
+            name: 'CRSRule',
+            priority: 0,
+            statement: {
+              managedRuleGroupStatement: {
+                name:'AWSManagedRulesAmazonIpReputationList',
+                vendorName:'AWS'
+              }
+            },
+            visibilityConfig: {
+              cloudWatchMetricsEnabled: true,
+              metricName:'MetricForWebACLCDK-CRS',
+              sampledRequestsEnabled: true,
+            },
+            overrideAction: {
+              none: {}
+            },
+          }]
+        });
 
    const loggingBucket = new Bucket(this, 'cloudFrontLogginBucket', {
     versioned: true,
@@ -162,7 +193,7 @@ export class InfrastructureStack extends cdk.Stack {
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL
   });
 
-
+    
     const cfDistro = new cloudfront.Distribution(this,'chatnonymous',{
       defaultBehavior: {
         origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket),
@@ -180,14 +211,14 @@ export class InfrastructureStack extends cdk.Stack {
             eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST
           }
         ],
-        viewerProtocolPolicy : ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+        viewerProtocolPolicy : ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
+      webAclId:cfnWebACL.attrArn,
       enableLogging : true,
       logBucket : loggingBucket,
       logIncludesCookies : true,
       logFilePrefix : 'cloudfront-logs',
       defaultRootObject : 'index.html'
     })
-
   }
 }
