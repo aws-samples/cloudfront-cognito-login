@@ -20,11 +20,15 @@ exports.handler = async function(event) {
         method: 'POST',
         headers: {
           'content-type': 'application/x-www-form-urlencoded',
+<<<<<<< HEAD
           authorization: 'Basic ' + Buffer.from(secrets.ClientId + ':' + secrets.ClientSecret).toString('base64')
+=======
+          authorization: 'Basic ' + Buffer.from(secrets.ClientID + ':' + secrets.ClientSecret).toString('base64')
+>>>>>>> cc0a8ea75f7cd905399fd47f9e0b2b113ab587c7
         },
         data: querystring.stringify({
           grant_type: 'authorization_code',
-          redirect_uri: 'https://d174lp5a9lmryl.cloudfront.net/login',
+          redirect_uri: 'https://d3bi4zi96h8wdp.cloudfront.net/login',
           code
         }),
         url: `https://${secrets.DomainName}.auth.us-east-1.amazoncognito.com/oauth2/token`,

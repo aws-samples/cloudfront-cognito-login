@@ -30,7 +30,11 @@ exports.handler = async function(event) {
     const secrets = await secretsManager.getSecrets()
   
     if(cf.request.uri.startsWith('/index.html') ){
+<<<<<<< HEAD
       const valid = await verifyToken(cf,secrets.clientId,secrets.userPoolId);
+=======
+      const valid = await verifyToken(cf, secrets.ClientID, secrets.UserPoolID);
+>>>>>>> cc0a8ea75f7cd905399fd47f9e0b2b113ab587c7
       console.log(valid);
       if (valid === true) {
         return cf.request;
@@ -41,7 +45,11 @@ exports.handler = async function(event) {
           headers: {
             location: [{ // instructs browser to redirect after receiving the response
               key: 'Location',
+<<<<<<< HEAD
               value: `https://${secrets.domainName}.auth.us-east-1.amazoncognito.com/login?client_id=${secrets.clientId}&response_type=code&scope=email+openid&redirect_uri=https%3A%2F%2Fd174lp5a9lmryl.cloudfront.net/login`,
+=======
+              value: `https://${secrets.DomainName}.auth.us-east-1.amazoncognito.com/login?client_id=${secrets.ClientID}&response_type=code&scope=email+openid&redirect_uri=https%3A%2F%2Fd3bi4zi96h8wdp.cloudfront.net/login`,
+>>>>>>> cc0a8ea75f7cd905399fd47f9e0b2b113ab587c7
             }]
           }
         };

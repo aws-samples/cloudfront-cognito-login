@@ -24,13 +24,20 @@ export class PipelineStack extends Stack {
         installCommands: [
           "npm install -g aws-cdk",
           "npm install",
-          "cd ab3-static-site",
-          "npm install -g @angular/cli",
+          // "cd ab3-static-site",
+          // "npm install -g @angular/cli",
+          // "npm install",
+          // "ng build --configuration=production",
+          // "cd .."
+          "cd lambda/viewerRequest",
           "npm install",
+<<<<<<< HEAD
           "ng build --configuration=production",
           "cd ..",
           "cd lambda/viewerRequest",
           "npm install",
+=======
+>>>>>>> cc0a8ea75f7cd905399fd47f9e0b2b113ab587c7
           "cd ..",
           "cd originRequest",
           "npm install",
