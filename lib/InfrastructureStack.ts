@@ -10,7 +10,6 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
-import * as secretsManager from 'aws-cdk-lib/aws-secretsmanager';
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 
 
@@ -50,12 +49,7 @@ export class InfrastructureStack extends cdk.Stack {
       }
     });
 
-    const standardCognitoAttributes = {
-      givenName: true,
-      familyName: true,
-      email: true,
-      emailVerified: true
-    }
+  
 
     const userPoolClient = userPool.addClient('Client',{
       oAuth: {
@@ -64,7 +58,7 @@ export class InfrastructureStack extends cdk.Stack {
           // implicitCodeGrant: true
         },
         scopes:[cognito.OAuthScope.EMAIL],
-        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net/login","https://d174lp5a9lmryl.cloudfront.net/home"]
+        callbackUrls : ["https://d174lp5a9lmryl.cloudfront.net/login","https://d174lp5a9lmryl.cloudfront.net/index.html"]
       },
       authFlows:{
         userPassword:true
@@ -74,8 +68,34 @@ export class InfrastructureStack extends cdk.Stack {
       preventUserExistenceErrors: true,
       refreshTokenValidity: Duration.days(30),
       accessTokenValidity: Duration.days(1),
-      idTokenValidity: Duration.days(1)
+      idTokenValidity: Duration.days(1),
     });
+
+        //Google and Facebook IDP start //
+      const providerAttribute = cognito.ProviderAttribute;
+      const userPoolIdentityProviderFacebook = new cognito.UserPoolIdentityProviderFacebook(this,'FacebookIDP',{
+        clientId : userPoolClient.userPoolClientId,
+        clientSecret : userPoolClient.userPoolClientSecret.unsafeUnwrap(),
+        userPool : userPool,
+        attributeMapping: {
+          givenName : providerAttribute.FACEBOOK_FIRST_NAME,
+          familyName : providerAttribute.FACEBOOK_LAST_NAME,
+          email : providerAttribute.FACEBOOK_EMAIL
+        }
+      })
+
+      const userPoolIdentityProviderGoggle = new cognito.UserPoolIdentityProviderGoogle(this,'GoogleIDP',{
+        clientId : userPoolClient.userPoolClientId,
+        clientSecret: userPoolClient.userPoolClientSecret.unsafeUnwrap(),
+        userPool : userPool,
+
+        attributeMapping: {
+          givenName : providerAttribute.GOOGLE_GIVEN_NAME,
+          familyName: providerAttribute.GOOGLE_FAMILY_NAME,
+          email : providerAttribute.GOOGLE_EMAIL
+        }
+      })
+        //Google and Facebook IDP end // 
 
     // Create Premium group
     const groupName = 'premium'
@@ -117,13 +137,6 @@ export class InfrastructureStack extends cdk.Stack {
     });
 
 
-  //   new cdk.CfnOutput(this, 'userPoolId', {
-  //     value: userPool.userPoolId,
-  //   });
-  //   new cdk.CfnOutput(this, 'userPoolClientId', {
-  //     value: userPoolClient.userPoolClientId,
-  //   });
-
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this,'viewerRequest',{
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'viewerRequest.handler',
@@ -153,7 +166,6 @@ export class InfrastructureStack extends cdk.Stack {
     const oia = new OriginAccessIdentity(this, 'OIA', {
       comment: "Created by CDK for AB3 static site"
     });
-    // staticSiteBucket.grantRead(oia);
     // ------------------- Static chat app site cdk end -------------------
 
   const cfnWebACL = new wafv2.CfnWebACL(this, 'MyCDKWebAcl', {

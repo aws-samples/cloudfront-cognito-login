@@ -29,6 +29,13 @@ export class PipelineStack extends Stack {
           // "npm install",
           // "ng build --configuration=production",
           // "cd .."
+          "cd lambda/viewerRequest",
+          "npm install",
+          "cd ..",
+          "cd originRequest",
+          "npm install",
+          "cd ..",
+          "cd .."
         ],
         commands: ["cdk synth"],
         primaryOutputDirectory: "cdk.out",
