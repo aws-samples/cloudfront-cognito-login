@@ -246,16 +246,14 @@ export class InfrastructureStack extends cdk.Stack {
     );
 
     // Create api gateway with the lambda function as the endpoint
-    new apigw.LambdaRestApi(this, 'AddUserToPremiumEndpoint1', {
+    const api = new apigw.LambdaRestApi(this, 'AddUserToPremiumEndpoint1', {
       handler: addPremiumUserFunction,
+      proxy: false,
       defaultCorsPreflightOptions : {
-        allowOrigins : ['d3bi4zi96h8wdp.cloudfront.net/'],
-        allowHeaders : ['*']
+        allowOrigins : [`https://${cfDistro.distributionDomainName}`],
+        allowHeaders : ['*'],
+        allowMethods: [ 'POST']
       },
     });
-
-
-
-
   }
 }

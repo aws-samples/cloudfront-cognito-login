@@ -5,7 +5,7 @@ exports.handler = (event, context, callback) => {
   console.log('request:', JSON.stringify(event, undefined, 2));
 
   var premiumGroupName = process.env.premiumGroupName
-  var username = JSON.parse(event.body, undefined, 2).username
+  var username = event.username
 
   var params = {
     GroupName: premiumGroupName,
