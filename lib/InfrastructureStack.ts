@@ -49,7 +49,6 @@ export class InfrastructureStack extends cdk.Stack {
       versioned: true,
       encryption: BucketEncryption.S3_MANAGED,
       bucketName: 'ab3-static-chat-site',
-      websiteIndexDocument: 'index.html',
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL
     });
 
@@ -61,6 +60,8 @@ export class InfrastructureStack extends cdk.Stack {
     const oia = new OriginAccessIdentity(this, 'OIA', {
       comment: "Created by CDK for AB3 static site"
     });
+
+    staticSiteBucket.grantRead(oia)
     // ------------------- Static chat app site cdk end -------------------
 
     const cfnWebACL = new wafv2.CfnWebACL(this, 'MyCDKWebAcl', {
@@ -105,7 +106,9 @@ export class InfrastructureStack extends cdk.Stack {
 
     const cfDistro = new cloudfront.Distribution(this, 'chatnonymous', {
       defaultBehavior: {
-        origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket),
+        origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket,{
+          originAccessIdentity : oia
+        }),
         originRequestPolicy: new cloudfront.OriginRequestPolicy(this, 'queryStringOnly', {
           queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
           cookieBehavior: cloudfront.OriginRequestCookieBehavior.allowList("token")
@@ -169,13 +172,13 @@ export class InfrastructureStack extends cdk.Stack {
           // implicitCodeGrant: true
         },
         scopes: [cognito.OAuthScope.EMAIL],
-        callbackUrls: [`https://${cfDistro.distributionDomainName}/login`, `https://${cfDistro.distributionDomainName}/home`]
+        callbackUrls: [`https://${cfDistro.distributionDomainName}/login`, `https://${cfDistro.distributionDomainName}/index.html`]
       },
       authFlows: {
         userPassword: true
       },
       generateSecret: true,
-      supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO],
+      supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO,cognito.UserPoolClientIdentityProvider.GOOGLE,cognito.UserPoolClientIdentityProvider.FACEBOOK],
       preventUserExistenceErrors: true,
       refreshTokenValidity: Duration.days(30),
       accessTokenValidity: Duration.days(1),
@@ -243,8 +246,12 @@ export class InfrastructureStack extends cdk.Stack {
     );
 
     // Create api gateway with the lambda function as the endpoint
-    new apigw.LambdaRestApi(this, 'AddUserToPremiumEndpoint', {
-      handler: addPremiumUserFunction
+    new apigw.LambdaRestApi(this, 'AddUserToPremiumEndpoint1', {
+      handler: addPremiumUserFunction,
+      defaultCorsPreflightOptions : {
+        allowOrigins : ['d3bi4zi96h8wdp.cloudfront.net/'],
+        allowHeaders : ['*']
+      },
     });
 
 
