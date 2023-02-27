@@ -6,17 +6,20 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
-
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
-import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
+
+
 
 
 export class InfrastructureStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // Lambda@edge handlers start//
+    
     const readSecretsPolicy = new iam.PolicyStatement({
       actions: ['secretsmanager:GetSecretValue'],
       resources: ['arn:aws:secretsmanager:us-east-1:272525670255:secret:chatnonymousSecrets-onQd9j'], // This secret should already be present
@@ -43,6 +46,8 @@ export class InfrastructureStack extends cdk.Stack {
         statements: [readSecretsPolicy],
       }),
     );
+    // Lambda@edge handlers end//
+
 
     // ------------------- Static chat app site cdk start -------------------
     const staticSiteBucket = new Bucket(this, 'staticSiteBucket', {
@@ -52,10 +57,6 @@ export class InfrastructureStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL
     });
 
-    // new BucketDeployment(this, 'DeployWebsite', {
-    //   sources: [Source.asset('ab3-static-site/dist')],
-    //   destinationBucket: staticSiteBucket
-    // });
 
     const oia = new OriginAccessIdentity(this, 'OIA', {
       comment: "Created by CDK for AB3 static site"
@@ -63,6 +64,8 @@ export class InfrastructureStack extends cdk.Stack {
 
     staticSiteBucket.grantRead(oia)
     // ------------------- Static chat app site cdk end -------------------
+
+    // AWS WAF Start //
 
     const cfnWebACL = new wafv2.CfnWebACL(this, 'MyCDKWebAcl', {
 
@@ -96,13 +99,9 @@ export class InfrastructureStack extends cdk.Stack {
       }]
     });
 
-    const loggingBucket = new Bucket(this, 'cloudFrontLogginBucket', {
-      versioned: true,
-      encryption: BucketEncryption.S3_MANAGED,
-      bucketName: 'chatnonymous-cloudfront-logs',
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL
-    });
+    // AWS WAF End //
 
+    // AWS CloudFront Start //
 
     const cfDistro = new cloudfront.Distribution(this, 'chatnonymous', {
       defaultBehavior: {
@@ -127,11 +126,16 @@ export class InfrastructureStack extends cdk.Stack {
       },
       webAclId: cfnWebACL.attrArn,
       enableLogging: true,
-      logBucket: loggingBucket,
       logIncludesCookies: true,
       logFilePrefix: 'cloudfront-logs',
       defaultRootObject: 'index.html'
     })
+
+    // AWS CloudFront end //
+
+    // AWS Cognito Start //
+
+
 
     const userPool = new cognito.UserPool(this, 'userpool', {
       userPoolName: 'chatnonymous-user-pool',
@@ -185,11 +189,23 @@ export class InfrastructureStack extends cdk.Stack {
       idTokenValidity: Duration.days(1),
     });
 
+    // AWS Cognito End //
+
+
+    //Secrets Manager//
+     // 👇 get access to the secret object
+     const chatnonymousSecrets = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'chatnonymousSecrets-id',
+      'chatnonymousSecrets',
+    );
+    
+
     //Google and Facebook IDP start //
     const providerAttribute = cognito.ProviderAttribute;
     const userPoolIdentityProviderFacebook = new cognito.UserPoolIdentityProviderFacebook(this, 'FacebookIDP', {
-      clientId: userPoolClient.userPoolClientId,
-      clientSecret: userPoolClient.userPoolClientSecret.unsafeUnwrap(),
+      clientId: chatnonymousSecrets.secretValueFromJson('FacebookAppId').unsafeUnwrap(),
+      clientSecret: chatnonymousSecrets.secretValueFromJson('FacebookAppSecret').unsafeUnwrap(),
       userPool: userPool,
       attributeMapping: {
         givenName: providerAttribute.FACEBOOK_FIRST_NAME,
@@ -199,8 +215,8 @@ export class InfrastructureStack extends cdk.Stack {
     })
 
     const userPoolIdentityProviderGoggle = new cognito.UserPoolIdentityProviderGoogle(this, 'GoogleIDP', {
-      clientId: userPoolClient.userPoolClientId,
-      clientSecret: userPoolClient.userPoolClientSecret.unsafeUnwrap(),
+      clientId: chatnonymousSecrets.secretValueFromJson('GoogleAppId').unsafeUnwrap(),
+      clientSecret: chatnonymousSecrets.secretValueFromJson('GoogleAppSecret').unsafeUnwrap(),
       userPool: userPool,
 
       attributeMapping: {

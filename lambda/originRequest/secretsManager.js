@@ -8,11 +8,7 @@ const primarySecretManager = new AWS.SecretsManager({
 
 const getSecrets = async () => {
     let secrets;
-    try {
-        secrets = await getSecretsInternal(primarySecretManager)
-    } catch (e) {
-        secrets = await getSecretsInternal(fallbackSecretManager)
-    }
+    secrets = await getSecretsInternal(primarySecretManager)
     return secrets
 }
 

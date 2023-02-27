@@ -5,15 +5,12 @@ const secretsManager = require('./secretsManager.js');
 
 
 async function verifyToken(cf,client_id,userPoolId){
-  console.log("headrs in verify token :" + JSON.stringify(cf.request.headers) );
     if (cf.request.headers.cookie) {
         const cookies = cookie.parse(cf.request.headers.cookie[0].value);
-        console.log("cookies :" + JSON.stringify(cookies) );
         try {
           const { payload } = await jose.jwtVerify(cookies.token, jwks, {
             issuer: `https://cognito-idp.us-east-1.amazonaws.com/${userPoolId}`
           });
-          console.log("payload from verifytoken" + payload)
           if (payload.client_id === client_id) {
             return true;
           }
@@ -25,7 +22,6 @@ async function verifyToken(cf,client_id,userPoolId){
 }
 
 exports.handler = async function(event) {
-    console.log("events incoming to viewers request: " + JSON.stringify(event))
     const cf = event.Records[0].cf;
     const secrets = await secretsManager.getSecrets()
   
