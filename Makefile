@@ -4,7 +4,10 @@ build:
 	cd lambda/originRequest ; \
 	npm i
 
-	cd src/viewerRequest ; \
+	cd lambda/viewerRequest ; \
+	npm i
+	
+	cd lambda/premium_endpoint ; \
 	npm i
 
     cd ab3-static-site ; /
