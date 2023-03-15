@@ -26,7 +26,7 @@ export class InfrastructureStack extends cdk.Stack {
     });
 
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this, 'viewerRequest', {
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'viewerRequest.handler',
       code: lambda.Code.fromAsset('lambda/viewerRequest'),
     });
@@ -37,7 +37,7 @@ export class InfrastructureStack extends cdk.Stack {
     );
 
     const originRequest = new cloudfront.experimental.EdgeFunction(this, 'originRequest', {
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'originRequest.handler',
       code: lambda.Code.fromAsset('lambda/originRequest'),
     });
@@ -239,7 +239,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     // Add Lambda function that will add user to the premium group
     const addPremiumUserFunction = new lambda.Function(this, 'addPremiumUserFunction', {
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'addPremiumUser.handler',
       code: lambda.Code.fromAsset('lambda/premium_endpoint'),
       environment: {
