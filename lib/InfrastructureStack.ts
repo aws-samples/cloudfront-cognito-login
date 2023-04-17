@@ -54,13 +54,11 @@ export class InfrastructureStack extends cdk.Stack {
     const staticSiteBucket = new Bucket(this, 'staticSiteBucket', {
       versioned: true,
       encryption: BucketEncryption.S3_MANAGED,
-      bucketName: 'static-site',
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL
     });
 
-    //TODO: build website code and upload to s3 bucket//
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-      sources: [s3deploy.Source.asset('../static-site/dist/static-site')],
+      sources: [s3deploy.Source.asset('static-site/dist/static-site')],
       destinationBucket: staticSiteBucket,
     });
 

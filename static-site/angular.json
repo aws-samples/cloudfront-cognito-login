@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ab3-static-site": {
+    "static-site": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/ab3-static-site",
+            "outputPath": "dist/static-site",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -60,10 +60,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "ab3-static-site:build:production"
+              "browserTarget": "static-site:build:production"
             },
             "development": {
-              "browserTarget": "ab3-static-site:build:development"
+              "browserTarget": "static-site:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -71,7 +71,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "ab3-static-site:build"
+            "browserTarget": "static-site:build"
           }
         },
         "test": {

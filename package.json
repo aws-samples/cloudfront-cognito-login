@@ -2,7 +2,7 @@
   "name": "cloudfront-cognito-login",
   "version": "0.1.0",
   "bin": {
-    "cloudfront-cognito-stack": "bin/cloudfront-cognito-stack.js"
+    "cloudfront-cognito-stack": "bin/cloudfront-cognito-stack.ts"
   },
   "scripts": {
     "build": "tsc",
