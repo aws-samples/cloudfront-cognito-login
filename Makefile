@@ -12,7 +12,10 @@ build:
 	cd lambda/premium_endpoint ; \
 	npm i
 
-	cd ab3-static-site ; \
+	cd static-site ; \
+    npm i
+
+	cd static-site ; \
     ng build --configuration=production
 
 deploy:
