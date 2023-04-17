@@ -1,6 +1,8 @@
 all: build deploy
 
 build:
+	npm i
+
 	cd lambda/originRequest ; \
 	npm i
 
