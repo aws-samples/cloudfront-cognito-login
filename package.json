@@ -1,8 +1,8 @@
 {
-  "name": "sample-cloudfront-cognito-stack",
+  "name": "cloudfront-cognito-login",
   "version": "0.1.0",
   "bin": {
-    "sample-cloudfront-cognito-stack": "bin/sample-cloudfront-cognito-stack.js"
+    "cloudfront-cognito-stack": "bin/cloudfront-cognito-stack.js"
   },
   "scripts": {
     "build": "tsc",
