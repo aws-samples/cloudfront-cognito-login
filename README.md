@@ -82,7 +82,7 @@ Once you have a user added to your User Pool, you can add that user to a premium
 ```
 
 ## How to redirect to your own website
-This solution includes an example angular static website, hosted in s3 behind cloudfront. The website code is stored under `ab3-static-site`. If you want to use your own code, you need to do a few things:
+This solution includes an example angular static website, hosted in s3 behind cloudfront. The website code is stored under `static-site`. If you want to use your own code, you need to do a few things:
 * Within Makefile, edit the website path and any build commands needed.
 
 * Within `lib/json_schema_validator-stack.ts`, you will need to edit the `s3deploy.BucketDeployment` source to be where your website compiled code lives. There are comments within this file that specify how to do this.

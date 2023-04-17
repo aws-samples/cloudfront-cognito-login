@@ -1,5 +1,5 @@
 {
-  "name": "ab3-static-site",
+  "name": "static-site",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
