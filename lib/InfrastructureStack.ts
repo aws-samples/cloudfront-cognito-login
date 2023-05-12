@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { Duration } from 'aws-cdk-lib';
+import { Duration, SecretValue } from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -20,33 +20,18 @@ export class InfrastructureStack extends cdk.Stack {
     super(scope, id, props);
 
     // Lambda@edge handlers start//
-    
-    const readSecretsPolicy = new iam.PolicyStatement({
-      actions: ['secretsmanager:GetSecretValue'],
-      resources: ['arn:aws:secretsmanager:us-east-1:272525670255:secret:chatnonymousSecrets-onQd9j'], // This secret should already be present
-    });
-
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this, 'viewerRequest', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'viewerRequest.handler',
       code: lambda.Code.fromAsset('lambda/viewerRequest'),
     });
-    viewerRequest.role?.attachInlinePolicy(
-      new iam.Policy(this, 'add-secret-viewer-policy', {
-        statements: [readSecretsPolicy],
-      }),
-    );
-
     const originRequest = new cloudfront.experimental.EdgeFunction(this, 'originRequest', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'originRequest.handler',
       code: lambda.Code.fromAsset('lambda/originRequest'),
     });
-    originRequest.role?.attachInlinePolicy(
-      new iam.Policy(this, 'add-secret-origin-policy', {
-        statements: [readSecretsPolicy],
-      }),
-    );
+
+    
     // Lambda@edge handlers end//
 
 
@@ -196,21 +181,41 @@ export class InfrastructureStack extends cdk.Stack {
 
     // AWS Cognito End //
 
+    const secret = new secretsmanager.Secret(this, 'Secret', {
+      secretObjectValue: {
+        ClientID: SecretValue.unsafePlainText(userPoolClient.userPoolClientId),
+        ClientSecret: userPoolClient.userPoolClientSecret,
+        DomainName: SecretValue.unsafePlainText(userPoolDomain.domainName),
+        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId),
+        FacebookAppId: SecretValue.unsafePlainText("<INPUT_HERE>"),
+        FacebookAppSecret: SecretValue.unsafePlainText("<INPUT_HERE>"),
+        GoogleAppId: SecretValue.unsafePlainText("<INPUT_HERE>"),
+        GoogleAppSecret: SecretValue.unsafePlainText("<INPUT_HERE>")
+      },
+    })
+    const readSecretsPolicy = new iam.PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [secret.secretArn], // This secret should already be present
+    });
 
-    //Secrets Manager//
-     // 👇 get access to the secret object
-     const chatnonymousSecrets = secretsmanager.Secret.fromSecretNameV2(
-      this,
-      'chatnonymousSecrets-id',
-      'chatnonymousSecrets',
+    viewerRequest.role?.attachInlinePolicy(
+      new iam.Policy(this, 'add-secret-viewer-policy', {
+        statements: [readSecretsPolicy],
+      }),
+    );
+
+    originRequest.role?.attachInlinePolicy(
+      new iam.Policy(this, 'add-secret-origin-policy', {
+        statements: [readSecretsPolicy],
+      }),
     );
     
 
     //Google and Facebook IDP start //
     const providerAttribute = cognito.ProviderAttribute;
     const userPoolIdentityProviderFacebook = new cognito.UserPoolIdentityProviderFacebook(this, 'FacebookIDP', {
-      clientId: chatnonymousSecrets.secretValueFromJson('FacebookAppId').unsafeUnwrap(),
-      clientSecret: chatnonymousSecrets.secretValueFromJson('FacebookAppSecret').unsafeUnwrap(),
+      clientId: secret.secretValueFromJson('FacebookAppId').unsafeUnwrap(),
+      clientSecret: secret.secretValueFromJson('FacebookAppSecret').unsafeUnwrap(),
       userPool: userPool,
       attributeMapping: {
         givenName: providerAttribute.FACEBOOK_FIRST_NAME,
@@ -220,8 +225,8 @@ export class InfrastructureStack extends cdk.Stack {
     })
 
     const userPoolIdentityProviderGoggle = new cognito.UserPoolIdentityProviderGoogle(this, 'GoogleIDP', {
-      clientId: chatnonymousSecrets.secretValueFromJson('GoogleAppId').unsafeUnwrap(),
-      clientSecret: chatnonymousSecrets.secretValueFromJson('GoogleAppSecret').unsafeUnwrap(),
+      clientId: secret.secretValueFromJson('GoogleAppId').unsafeUnwrap(),
+      clientSecret: secret.secretValueFromJson('GoogleAppSecret').unsafeUnwrap(),
       userPool: userPool,
 
       attributeMapping: {
@@ -278,3 +283,4 @@ export class InfrastructureStack extends cdk.Stack {
     });
   }
 }
+
