@@ -7,7 +7,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
-import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
+import { BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
@@ -115,9 +115,11 @@ export class InfrastructureStack extends cdk.Stack {
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       webAclId: cfnWebACL.attrArn,
-      enableLogging: true,
       logIncludesCookies: true,
-      logFilePrefix: 'cloudfront-logs',
+      logBucket: new Bucket(this, 'CloudfrontLoggingBucket', {
+        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+        accessControl: BucketAccessControl.BUCKET_OWNER_FULL_CONTROL
+      }),
       defaultRootObject: 'index.html'
     })
 
