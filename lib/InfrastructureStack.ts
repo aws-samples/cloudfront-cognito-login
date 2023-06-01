@@ -115,13 +115,12 @@ export class InfrastructureStack extends cdk.Stack {
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       webAclId: cfnWebACL.attrArn,
+      enableLogging: true,
       logIncludesCookies: true,
-      logBucket: new Bucket(this, 'CloudfrontLoggingBucket', {
-        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-        accessControl: BucketAccessControl.BUCKET_OWNER_FULL_CONTROL
-      }),
+      logFilePrefix: 'cloudfront-logs',
       defaultRootObject: 'index.html'
     })
+
 
     // AWS CloudFront end //
 
@@ -237,6 +236,9 @@ export class InfrastructureStack extends cdk.Stack {
         email: providerAttribute.GOOGLE_EMAIL
       }
     })
+
+    userPoolClient.node.addDependency(userPoolIdentityProviderFacebook);
+    userPoolClient.node.addDependency(userPoolIdentityProviderGoggle);
     //Google and Facebook IDP end // 
 
     // Create Premium group
