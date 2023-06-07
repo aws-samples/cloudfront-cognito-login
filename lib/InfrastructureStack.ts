@@ -11,6 +11,7 @@ import { BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption } from
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import { THIRD_PARTY_IDPROVIDER_SECRET_NAME } from './constants';
 
 
 
@@ -173,14 +174,19 @@ export class InfrastructureStack extends cdk.Stack {
         userPassword: true
       },
       generateSecret: true,
-      supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO,cognito.UserPoolClientIdentityProvider.GOOGLE,cognito.UserPoolClientIdentityProvider.FACEBOOK],
       preventUserExistenceErrors: true,
       refreshTokenValidity: Duration.days(30),
       accessTokenValidity: Duration.days(1),
       idTokenValidity: Duration.days(1),
+
     });
 
     // AWS Cognito End //
+    const chatnonymousSecrets = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'chatnonymousSecrets-id',
+      'chatnonymousSecrets',
+    );
 
     const secret = new secretsmanager.Secret(this, 'Secret', {
       secretObjectValue: {
@@ -188,10 +194,10 @@ export class InfrastructureStack extends cdk.Stack {
         ClientSecret: userPoolClient.userPoolClientSecret,
         DomainName: SecretValue.unsafePlainText(userPoolDomain.domainName),
         UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId),
-        FacebookAppId: SecretValue.unsafePlainText("<INPUT_HERE>"),
-        FacebookAppSecret: SecretValue.unsafePlainText("<INPUT_HERE>"),
-        GoogleAppId: SecretValue.unsafePlainText("<INPUT_HERE>"),
-        GoogleAppSecret: SecretValue.unsafePlainText("<INPUT_HERE>")
+        FacebookAppId: chatnonymousSecrets.secretValueFromJson('FacebookAppId'),
+        FacebookAppSecret: chatnonymousSecrets.secretValueFromJson('FacebookAppSecret'),
+        GoogleAppId: chatnonymousSecrets.secretValueFromJson('GoogleAppId'),
+        GoogleAppSecret: SecretValue.unsafePlainText('ssds')
       },
     })
     const readSecretsPolicy = new iam.PolicyStatement({
@@ -237,8 +243,6 @@ export class InfrastructureStack extends cdk.Stack {
       }
     })
 
-    userPoolClient.node.addDependency(userPoolIdentityProviderFacebook);
-    userPoolClient.node.addDependency(userPoolIdentityProviderGoggle);
     //Google and Facebook IDP end // 
 
     // Create Premium group
