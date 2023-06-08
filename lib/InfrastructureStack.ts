@@ -14,8 +14,6 @@ import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { THIRD_PARTY_IDPROVIDER_SECRET_NAME } from './constants';
 
 
-
-
 export class InfrastructureStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -181,13 +179,23 @@ export class InfrastructureStack extends cdk.Stack {
 
     // AWS Cognito End //
 
+    const secrets = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'AppSecrets-id',
+      'AppSecrets',
+    );
+
     const secret = new secretsmanager.Secret(this, 'Secret', {
       secretName: "cognitoClientSecrets",
       secretObjectValue: {
         ClientID: SecretValue.unsafePlainText(userPoolClient.userPoolClientId),
         ClientSecret: userPoolClient.userPoolClientSecret,
         DomainName: SecretValue.unsafePlainText(userPoolDomain.domainName),
-        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId)
+        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId),
+        FacebookAppId: secrets.secretValueFromJson('FacebookAppId'),
+        FacebookAppSecret: secrets.secretValueFromJson('FacebookAppSecret'),
+        GoogleAppId: secrets.secretValueFromJson('GoogleAppId'),
+        GoogleAppSecret: SecretValue.unsafePlainText('ssds')
       },
     })
     const readSecretsPolicy = new iam.PolicyStatement({
