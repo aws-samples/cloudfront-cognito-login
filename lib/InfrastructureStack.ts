@@ -1,16 +1,17 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { Duration } from 'aws-cdk-lib';
+import { Duration, SecretValue } from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
-import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
+import { BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import { THIRD_PARTY_IDPROVIDER_SECRET_NAME } from './constants';
 
 
 
@@ -20,33 +21,18 @@ export class InfrastructureStack extends cdk.Stack {
     super(scope, id, props);
 
     // Lambda@edge handlers start//
-    
-    const readSecretsPolicy = new iam.PolicyStatement({
-      actions: ['secretsmanager:GetSecretValue'],
-      resources: ['arn:aws:secretsmanager:us-east-1:272525670255:secret:chatnonymousSecrets-onQd9j'], // This secret should already be present
-    });
-
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this, 'viewerRequest', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'viewerRequest.handler',
       code: lambda.Code.fromAsset('lambda/viewerRequest'),
     });
-    viewerRequest.role?.attachInlinePolicy(
-      new iam.Policy(this, 'add-secret-viewer-policy', {
-        statements: [readSecretsPolicy],
-      }),
-    );
-
     const originRequest = new cloudfront.experimental.EdgeFunction(this, 'originRequest', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'originRequest.handler',
       code: lambda.Code.fromAsset('lambda/originRequest'),
     });
-    originRequest.role?.attachInlinePolicy(
-      new iam.Policy(this, 'add-secret-origin-policy', {
-        statements: [readSecretsPolicy],
-      }),
-    );
+
+    
     // Lambda@edge handlers end//
 
 
@@ -136,11 +122,10 @@ export class InfrastructureStack extends cdk.Stack {
       defaultRootObject: 'index.html'
     })
 
+
     // AWS CloudFront end //
 
     // AWS Cognito Start //
-
-
 
     const userPool = new cognito.UserPool(this, 'userpool', {
       userPoolName: 'chatnonymous-user-pool',
@@ -187,30 +172,52 @@ export class InfrastructureStack extends cdk.Stack {
         userPassword: true
       },
       generateSecret: true,
-      supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO,cognito.UserPoolClientIdentityProvider.GOOGLE,cognito.UserPoolClientIdentityProvider.FACEBOOK],
       preventUserExistenceErrors: true,
       refreshTokenValidity: Duration.days(30),
       accessTokenValidity: Duration.days(1),
       idTokenValidity: Duration.days(1),
+
     });
 
     // AWS Cognito End //
 
+    const secret = new secretsmanager.Secret(this, 'Secret', {
+      secretName: "cognitoClientSecrets",
+      secretObjectValue: {
+        ClientID: SecretValue.unsafePlainText(userPoolClient.userPoolClientId),
+        ClientSecret: userPoolClient.userPoolClientSecret,
+        DomainName: SecretValue.unsafePlainText(userPoolDomain.domainName),
+        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId)
+      },
+    })
+    const readSecretsPolicy = new iam.PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [secret.secretArn], // This secret should already be present
+    });
 
-    //Secrets Manager//
-     // 👇 get access to the secret object
-     const chatnonymousSecrets = secretsmanager.Secret.fromSecretNameV2(
-      this,
-      'chatnonymousSecrets-id',
-      'chatnonymousSecrets',
+    viewerRequest.role?.attachInlinePolicy(
+      new iam.Policy(this, 'add-secret-viewer-policy', {
+        statements: [readSecretsPolicy],
+      }),
+    );
+
+    originRequest.role?.attachInlinePolicy(
+      new iam.Policy(this, 'add-secret-origin-policy', {
+        statements: [readSecretsPolicy],
+      }),
     );
     
+    const thirdPardyIdsSecret = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      THIRD_PARTY_IDPROVIDER_SECRET_NAME,
+      THIRD_PARTY_IDPROVIDER_SECRET_NAME,
+    );
 
     //Google and Facebook IDP start //
     const providerAttribute = cognito.ProviderAttribute;
     const userPoolIdentityProviderFacebook = new cognito.UserPoolIdentityProviderFacebook(this, 'FacebookIDP', {
-      clientId: chatnonymousSecrets.secretValueFromJson('FacebookAppId').unsafeUnwrap(),
-      clientSecret: chatnonymousSecrets.secretValueFromJson('FacebookAppSecret').unsafeUnwrap(),
+      clientId: thirdPardyIdsSecret.secretValueFromJson('FacebookAppId').unsafeUnwrap(),
+      clientSecret: thirdPardyIdsSecret.secretValueFromJson('FacebookAppSecret').unsafeUnwrap(),
       userPool: userPool,
       attributeMapping: {
         givenName: providerAttribute.FACEBOOK_FIRST_NAME,
@@ -220,8 +227,8 @@ export class InfrastructureStack extends cdk.Stack {
     })
 
     const userPoolIdentityProviderGoggle = new cognito.UserPoolIdentityProviderGoogle(this, 'GoogleIDP', {
-      clientId: chatnonymousSecrets.secretValueFromJson('GoogleAppId').unsafeUnwrap(),
-      clientSecret: chatnonymousSecrets.secretValueFromJson('GoogleAppSecret').unsafeUnwrap(),
+      clientId: thirdPardyIdsSecret.secretValueFromJson('GoogleAppId').unsafeUnwrap(),
+      clientSecret: thirdPardyIdsSecret.secretValueFromJson('GoogleAppSecret').unsafeUnwrap(),
       userPool: userPool,
 
       attributeMapping: {
@@ -230,6 +237,7 @@ export class InfrastructureStack extends cdk.Stack {
         email: providerAttribute.GOOGLE_EMAIL
       }
     })
+
     //Google and Facebook IDP end // 
 
     // Create Premium group
@@ -278,3 +286,4 @@ export class InfrastructureStack extends cdk.Stack {
     });
   }
 }
+
