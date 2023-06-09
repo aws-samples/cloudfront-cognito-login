@@ -7,7 +7,7 @@ const app = new cdk.App();
 new PreInfrastructureStack(app, 'Pre-Development-InfrastructureStack',{
     env:{
         account: '<Your AWS Account ID',
-        region: '<Your AWS region'
+        region: '<Your AWS region>'
     }    
 });
 
