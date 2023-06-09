@@ -2,6 +2,9 @@
 
 build() {
   npm i
+  cd pre-cloudfront-cognito-stack
+  npm i 
+  cd ../
 
   cd lambda/originRequest
   npm i
