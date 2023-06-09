@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 
-const name = "chatnonymousSecrets";
+const name = "cognitoClientSecrets";
 const primarySecretManager = new AWS.SecretsManager({
     region: 'us-east-1',
 });
