@@ -127,8 +127,6 @@ export class InfrastructureStack extends cdk.Stack {
 
     // AWS Cognito Start //
 
-
-
     const userPool = new cognito.UserPool(this, 'userpool', {
       userPoolName: 'chatnonymous-user-pool',
       selfSignUpEnabled: true,
@@ -182,22 +180,14 @@ export class InfrastructureStack extends cdk.Stack {
     });
 
     // AWS Cognito End //
-    const chatnonymousSecrets = secretsmanager.Secret.fromSecretNameV2(
-      this,
-      'chatnonymousSecrets-id',
-      'chatnonymousSecrets',
-    );
 
     const secret = new secretsmanager.Secret(this, 'Secret', {
+      secretName: "cognitoClientSecrets",
       secretObjectValue: {
         ClientID: SecretValue.unsafePlainText(userPoolClient.userPoolClientId),
         ClientSecret: userPoolClient.userPoolClientSecret,
         DomainName: SecretValue.unsafePlainText(userPoolDomain.domainName),
-        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId),
-        FacebookAppId: chatnonymousSecrets.secretValueFromJson('FacebookAppId'),
-        FacebookAppSecret: chatnonymousSecrets.secretValueFromJson('FacebookAppSecret'),
-        GoogleAppId: chatnonymousSecrets.secretValueFromJson('GoogleAppId'),
-        GoogleAppSecret: SecretValue.unsafePlainText('ssds')
+        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId)
       },
     })
     const readSecretsPolicy = new iam.PolicyStatement({
@@ -217,12 +207,17 @@ export class InfrastructureStack extends cdk.Stack {
       }),
     );
     
+    const thirdPardyIdsSecret = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      THIRD_PARTY_IDPROVIDER_SECRET_NAME,
+      THIRD_PARTY_IDPROVIDER_SECRET_NAME,
+    );
 
     //Google and Facebook IDP start //
     const providerAttribute = cognito.ProviderAttribute;
     const userPoolIdentityProviderFacebook = new cognito.UserPoolIdentityProviderFacebook(this, 'FacebookIDP', {
-      clientId: secret.secretValueFromJson('FacebookAppId').unsafeUnwrap(),
-      clientSecret: secret.secretValueFromJson('FacebookAppSecret').unsafeUnwrap(),
+      clientId: thirdPardyIdsSecret.secretValueFromJson('FacebookAppId').unsafeUnwrap(),
+      clientSecret: thirdPardyIdsSecret.secretValueFromJson('FacebookAppSecret').unsafeUnwrap(),
       userPool: userPool,
       attributeMapping: {
         givenName: providerAttribute.FACEBOOK_FIRST_NAME,
@@ -232,8 +227,8 @@ export class InfrastructureStack extends cdk.Stack {
     })
 
     const userPoolIdentityProviderGoggle = new cognito.UserPoolIdentityProviderGoogle(this, 'GoogleIDP', {
-      clientId: secret.secretValueFromJson('GoogleAppId').unsafeUnwrap(),
-      clientSecret: secret.secretValueFromJson('GoogleAppSecret').unsafeUnwrap(),
+      clientId: thirdPardyIdsSecret.secretValueFromJson('GoogleAppId').unsafeUnwrap(),
+      clientSecret: thirdPardyIdsSecret.secretValueFromJson('GoogleAppSecret').unsafeUnwrap(),
       userPool: userPool,
 
       attributeMapping: {

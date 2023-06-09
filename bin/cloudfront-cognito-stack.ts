@@ -6,7 +6,7 @@ const app = new cdk.App();
 
 new InfrastructureStack(app, 'Development-InfrastructureStack',{
     env:{
-        account: '381371834000',
-        region: 'us-east-1'
+        account: '<Your AWS Account ID',
+        region: '<Your AWS region'
     }    
 });

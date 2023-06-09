@@ -12,7 +12,7 @@ export class PreInfrastructureStack extends cdk.Stack {
     super(scope, id, props);
 
     const secret = new secretsmanager.Secret(this, 'Secret', {
-      secretName: 'chatnonymousSecrets',
+      secretName: THIRD_PARTY_IDPROVIDER_SECRET_NAME,
       secretObjectValue: {
         FacebookAppId: SecretValue.unsafePlainText("<INPUT_HERE>"),
         FacebookAppSecret: SecretValue.unsafePlainText("<INPUT_HERE>"),
