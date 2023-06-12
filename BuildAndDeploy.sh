@@ -54,7 +54,7 @@ while [[ ! "$input" =~ ^[Yy]$ ]]; do
 done
 
 }
-buildAndDeploy() {
+all() {
   build
   deploySecretsOnly
   awaitUserConfirmation
@@ -63,8 +63,8 @@ buildAndDeploy() {
 }
 if [ "$1" == "build" ]; then
   build
-elif [ "$1" == "buildAndDeploy" ]; then
-  buildAndDeploy
+elif [ "$1" == "all" ]; then
+  all
 elif [ "$1" == "deploySecretsOnly" ]; then
   deploySecretsOnly
 elif [ "$1" == "deployMainStack" ]; then
