@@ -19,7 +19,6 @@ build() {
   npm i
   ng build --configuration=production
   cd ..
-  cdk bootstrap
 }
 
 deploy() {
