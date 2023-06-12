@@ -179,23 +179,13 @@ export class InfrastructureStack extends cdk.Stack {
 
     // AWS Cognito End //
 
-    const secrets = secretsmanager.Secret.fromSecretNameV2(
-      this,
-      'AppSecrets-id',
-      'AppSecrets',
-    );
-
     const secret = new secretsmanager.Secret(this, 'Secret', {
       secretName: "cognitoClientSecrets",
       secretObjectValue: {
         ClientID: SecretValue.unsafePlainText(userPoolClient.userPoolClientId),
         ClientSecret: userPoolClient.userPoolClientSecret,
         DomainName: SecretValue.unsafePlainText(userPoolDomain.domainName),
-        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId),
-        FacebookAppId: secrets.secretValueFromJson('FacebookAppId'),
-        FacebookAppSecret: secrets.secretValueFromJson('FacebookAppSecret'),
-        GoogleAppId: secrets.secretValueFromJson('GoogleAppId'),
-        GoogleAppSecret: SecretValue.unsafePlainText('ssds')
+        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId)
       },
     })
     const readSecretsPolicy = new iam.PolicyStatement({
