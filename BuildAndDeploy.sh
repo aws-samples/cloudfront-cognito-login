@@ -54,7 +54,22 @@ while [[ ! "$input" =~ ^[Yy]$ ]]; do
 done
 
 }
-build
-deploySecretsOnly
-awaitUserConfirmation
-deployMainStack
+buildAndDeploy() {
+  build
+  deploySecretsOnly
+  awaitUserConfirmation
+  deployMainStack
+
+}
+if [ "$1" == "build" ]; then
+  build
+elif [ "$1" == "buildAndDeploy" ]; then
+  buildAndDeploy
+elif [ "$1" == "deploySecretsOnly" ]; then
+  deploySecretsOnly
+elif [ "$1" == "deployMainStack" ]; then
+  deployMainStack
+else
+  echo "Invalid method name"
+fi
+
