@@ -11,7 +11,7 @@ import { BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption } from
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import { THIRD_PARTY_IDPROVIDER_SECRET_NAME } from './constants';
+import { THIRD_PARTY_IDPROVIDER_SECRET_NAME } from '../bin/constants';
 
 
 export class InfrastructureStack extends cdk.Stack {
