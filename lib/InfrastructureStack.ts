@@ -92,7 +92,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     // AWS CloudFront Start //
 
-    const cfDistro = new cloudfront.Distribution(this, 'chatnonymous', {
+    const cfDistro = new cloudfront.Distribution(this, 'example', {
       defaultBehavior: {
         origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket,{
           originAccessIdentity : oia
@@ -126,7 +126,7 @@ export class InfrastructureStack extends cdk.Stack {
     // AWS Cognito Start //
 
     const userPool = new cognito.UserPool(this, 'userpool', {
-      userPoolName: 'chatnonymous-user-pool',
+      userPoolName: 'example-user-pool',
       selfSignUpEnabled: true,
       signInAliases: {
         email: true,
@@ -153,7 +153,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     const userPoolDomain = userPool.addDomain('hostedDomain', {
       cognitoDomain: {
-        domainPrefix: 'chatnonymous',
+        domainPrefix: 'example',
       }
     });
 
