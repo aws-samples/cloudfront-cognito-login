@@ -1,10 +1,11 @@
 #!/bin/bash
 
 build() {
-  npm i
   cd pre-cloudfront-cognito-stack
   npm i 
   cd ../
+  cd cloudfront-cognito-stack
+  npm i 
 
   cd lambda/originRequest
   npm i
@@ -27,6 +28,7 @@ deploy() {
   cdk bootstrap
   cdk deploy
   cd ../
+  cd cloudfront-cognito-stack
   cdk synth
   cdk bootstrap
   cdk deploy
@@ -42,7 +44,7 @@ GoUp(){
    cd ../
 }
 MainStack() {
- 
+  cd cloudfront-cognito-stack
   cdk synth
   cdk bootstrap
   cdk deploy
@@ -69,9 +71,9 @@ if [ "$1" == "build" ]; then
   build
 elif [ "$1" == "all" ]; then
   all
-elif [ "$1" == "SecretsOnly" ]; then
+elif [ "$1" == "secretsOnly" ]; then
   SecretsOnly
-elif [ "$1" == "MainStack" ]; then
+elif [ "$1" == "mainStack" ]; then
   MainStack
 else
   echo "Invalid method name"
