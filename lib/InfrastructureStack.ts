@@ -14,8 +14,6 @@ import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { THIRD_PARTY_IDPROVIDER_SECRET_NAME } from './constants';
 
 
-
-
 export class InfrastructureStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
