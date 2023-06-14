@@ -11,7 +11,7 @@ import { BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption } from
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import { THIRD_PARTY_IDPROVIDER_SECRET_NAME } from '../bin/constants';
+import { THIRD_PARTY_IDPROVIDER_SECRET_NAME, DOMAIN_PREFIX } from '../bin/constants';
 
 
 export class InfrastructureStack extends cdk.Stack {
@@ -19,13 +19,27 @@ export class InfrastructureStack extends cdk.Stack {
     super(scope, id, props);
 
     // Lambda@edge handlers start//
+    const lambdaRole = new iam.Role(this, 'EdgeFunctionRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+    });
+  
+    // Add an inline policy to allow access to Secrets Manager
+    lambdaRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: ['arn:aws:secretsmanager:*'],
+      })
+    );
+  
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this, 'viewerRequest', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'viewerRequest.handler',
       code: lambda.Code.fromAsset('lambda/viewerRequest'),
+      role: lambdaRole
     });
     const originRequest = new cloudfront.experimental.EdgeFunction(this, 'originRequest', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'originRequest.handler',
       code: lambda.Code.fromAsset('lambda/originRequest'),
     });
@@ -153,7 +167,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     const userPoolDomain = userPool.addDomain('hostedDomain', {
       cognitoDomain: {
-        domainPrefix: 'example',
+        domainPrefix: DOMAIN_PREFIX,
       }
     });
 

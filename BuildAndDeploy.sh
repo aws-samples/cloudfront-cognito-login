@@ -19,7 +19,7 @@ build() {
   cd ../../static-site
   npm i
   ng build --configuration=production
-  cd ..
+  cd ../..
 }
 
 deploy() {
@@ -73,7 +73,7 @@ elif [ "$1" == "all" ]; then
   all
 elif [ "$1" == "secretsOnly" ]; then
   SecretsOnly
-elif [ "$1" == "mainStack" ]; then
+elif [ "$1" == "MainStack" ]; then
   MainStack
 else
   echo "Invalid method name"
