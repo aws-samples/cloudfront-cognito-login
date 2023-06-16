@@ -42,6 +42,7 @@ export class InfrastructureStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'originRequest.handler',
       code: lambda.Code.fromAsset('lambda/originRequest'),
+      role: lambdaRole
     });
 
     
@@ -199,7 +200,8 @@ export class InfrastructureStack extends cdk.Stack {
         ClientID: SecretValue.unsafePlainText(userPoolClient.userPoolClientId),
         ClientSecret: userPoolClient.userPoolClientSecret,
         DomainName: SecretValue.unsafePlainText(userPoolDomain.domainName),
-        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId)
+        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId),
+        DistributionDomainName: SecretValue.unsafePlainText(cfDistro.distributionDomainName)
       },
     })
     const readSecretsPolicy = new iam.PolicyStatement({
