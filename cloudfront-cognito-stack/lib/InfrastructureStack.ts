@@ -24,6 +24,7 @@ export class InfrastructureStack extends cdk.Stack {
     });
   
     // Add an inline policy to allow access to Secrets Manager
+    // TODO add Cloudwatch log group create and write policy
     lambdaRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
