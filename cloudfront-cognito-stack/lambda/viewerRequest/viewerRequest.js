@@ -45,7 +45,7 @@ exports.handler = async function(event) {
           headers: {
             location: [{ // instructs browser to redirect after receiving the response
               key: 'Location',
-              value: `https://${secrets.DomainName}.auth.us-east-1.amazoncognito.com/login?client_id=${secrets.ClientID}&response_type=code&scope=email+openid&redirect_uri=https%3A%2F%2Fd3bi4zi96h8wdp.cloudfront.net/login`,
+              value: `https://${secrets.DomainName}.auth.us-east-1.amazoncognito.com/login?client_id=${secrets.ClientID}&response_type=code&scope=email+openid&redirect_uri=https%3A%2F%2F${secrets.DistributionDomainName}/login`,
             }]
           }
         };
