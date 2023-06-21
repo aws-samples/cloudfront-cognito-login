@@ -23,8 +23,6 @@ export class InfrastructureStack extends cdk.Stack {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
     });
   
-    // Add an inline policy to allow access to Secrets Manager
-    // TODO add Cloudwatch log group create and write policy
     lambdaRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -32,7 +30,17 @@ export class InfrastructureStack extends cdk.Stack {
         resources: ['arn:aws:secretsmanager:*'],
       })
     );
-  
+    const cloudWatchPolicy = new iam.PolicyStatement({
+      actions: [
+        'logs:CreateLogGroup',
+        'logs:CreateLogStream',
+        'logs:PutLogEvents',
+      ],
+      resources: ['arn:aws:logs:*:*:*'],
+    });
+    
+    lambdaRole.addToPolicy(cloudWatchPolicy);
+    
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this, 'viewerRequest', {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'viewerRequest.handler',
