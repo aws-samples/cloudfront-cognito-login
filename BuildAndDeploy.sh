@@ -73,7 +73,7 @@ elif [ "$1" == "all" ]; then
   all
 elif [ "$1" == "secretsOnly" ]; then
   SecretsOnly
-elif [ "$1" == "MainStack" ]; then
+elif [ "$1" == "mainStack" ]; then
   MainStack
 else
   echo "Invalid method name"
