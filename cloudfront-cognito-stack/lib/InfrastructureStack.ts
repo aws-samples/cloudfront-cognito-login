@@ -30,16 +30,7 @@ export class InfrastructureStack extends cdk.Stack {
         resources: ['arn:aws:secretsmanager:*'],
       })
     );
-    const cloudWatchPolicy = new iam.PolicyStatement({
-      actions: [
-        'logs:CreateLogGroup',
-        'logs:CreateLogStream',
-        'logs:PutLogEvents',
-      ],
-      resources: ['arn:aws:logs:*:*:*'],
-    });
-    
-    lambdaRole.addToPolicy(cloudWatchPolicy);
+    lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
     
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this, 'viewerRequest', {
       runtime: lambda.Runtime.NODEJS_16_X,
