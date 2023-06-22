@@ -27,7 +27,7 @@ export class InfrastructureStack extends cdk.Stack {
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['secretsmanager:GetSecretValue'],
-        resources: ['arn:aws:secretsmanager:*'],
+        resources: [`arn:aws:secretsmanager:*:*:secret:cognitoClientSecrets*`],
       })
     );
     lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
@@ -204,23 +204,7 @@ export class InfrastructureStack extends cdk.Stack {
         DistributionDomainName: SecretValue.unsafePlainText(cfDistro.distributionDomainName)
       },
     })
-    const readSecretsPolicy = new iam.PolicyStatement({
-      actions: ['secretsmanager:GetSecretValue'],
-      resources: [secret.secretArn], // This secret should already be present
-    });
 
-    viewerRequest.role?.attachInlinePolicy(
-      new iam.Policy(this, 'add-secret-viewer-policy', {
-        statements: [readSecretsPolicy],
-      }),
-    );
-
-    originRequest.role?.attachInlinePolicy(
-      new iam.Policy(this, 'add-secret-origin-policy', {
-        statements: [readSecretsPolicy],
-      }),
-    );
-    
     const thirdPardyIdsSecret = secretsmanager.Secret.fromSecretNameV2(
       this,
       THIRD_PARTY_IDPROVIDER_SECRET_NAME,
