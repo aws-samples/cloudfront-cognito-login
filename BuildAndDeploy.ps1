@@ -1,8 +1,9 @@
 function build {
-  npm i
   cd pre-cloudfront-cognito-stack
   npm i 
   cd ../
+  cd cloudfront-cognito-stack
+  npm i 
 
   cd lambda/originRequest
   npm i
@@ -16,7 +17,7 @@ function build {
   cd ../../static-site
   npm i
   ng build --configuration=production
-  cd ..
+  cd ../..
 }
 
 function deploy {
@@ -25,6 +26,7 @@ function deploy {
   cdk bootstrap
   cdk deploy
   cd ../
+  cd cloudfront-cognito-stack
   cdk synth
   cdk bootstrap
   cdk deploy
@@ -35,6 +37,10 @@ function deploySecretsOnly {
   cdk synth
   cdk bootstrap
   cdk deploy
+}
+
+function GoUp(){
+  cd ../
 }
 
 function deployMainStack {
@@ -57,6 +63,7 @@ function all {
   build
   deploySecretsOnly
   awaitUserConfirmation
+  GoUp
   deployMainStack
 }
 
