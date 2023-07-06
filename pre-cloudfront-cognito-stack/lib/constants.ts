@@ -1,1 +1,0 @@
-export const THIRD_PARTY_IDPROVIDER_SECRET_NAME = "thirdPartyProviders";

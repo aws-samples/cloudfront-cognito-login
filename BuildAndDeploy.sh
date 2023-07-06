@@ -1,10 +1,11 @@
 #!/bin/bash
 
 build() {
-  npm i
   cd pre-cloudfront-cognito-stack
   npm i 
   cd ../
+  cd cloudfront-cognito-stack
+  npm i 
 
   cd lambda/originRequest
   npm i
@@ -18,7 +19,7 @@ build() {
   cd ../../static-site
   npm i
   ng build --configuration=production
-  cd ..
+  cd ../..
 }
 
 deploy() {
@@ -27,19 +28,23 @@ deploy() {
   cdk bootstrap
   cdk deploy
   cd ../
+  cd cloudfront-cognito-stack
   cdk synth
   cdk bootstrap
   cdk deploy
 }
 
-deploySecretsOnly() {
+SecretsOnly() {
   cd pre-cloudfront-cognito-stack
   cdk synth
   cdk bootstrap
   cdk deploy
 }
-deployMainStack() {
-  cd ../
+GoUp(){
+   cd ../
+}
+MainStack() {
+  cd cloudfront-cognito-stack
   cdk synth
   cdk bootstrap
   cdk deploy
@@ -56,19 +61,20 @@ done
 }
 all() {
   build
-  deploySecretsOnly
+  SecretsOnly
   awaitUserConfirmation
-  deployMainStack
+  GoUp
+  MainStack
 
 }
 if [ "$1" == "build" ]; then
   build
 elif [ "$1" == "all" ]; then
   all
-elif [ "$1" == "deploySecretsOnly" ]; then
-  deploySecretsOnly
-elif [ "$1" == "deployMainStack" ]; then
-  deployMainStack
+elif [ "$1" == "secretsOnly" ]; then
+  SecretsOnly
+elif [ "$1" == "mainStack" ]; then
+  MainStack
 else
   echo "Invalid method name"
 fi

@@ -4,11 +4,6 @@ const cookie = require('cookie');
 const axios = require('axios'); 
 const secretsManager = require('./secretsManager.js');
 
-
-
-
-
-
 exports.handler = async function(event) {
   console.log("event in origin request :" + JSON.stringify(event))
   const secrets = await secretsManager.getSecrets()
@@ -24,7 +19,7 @@ exports.handler = async function(event) {
         },
         data: querystring.stringify({
           grant_type: 'authorization_code',
-          redirect_uri: 'https://d3bi4zi96h8wdp.cloudfront.net/login',
+          redirect_uri: `https://${secrets.DistributionDomainName}/login`,
           code
         }),
         url: `https://${secrets.DomainName}.auth.us-east-1.amazoncognito.com/oauth2/token`,

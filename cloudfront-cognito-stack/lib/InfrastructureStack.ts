@@ -11,7 +11,7 @@ import { BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption } from
 import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import { THIRD_PARTY_IDPROVIDER_SECRET_NAME } from './constants';
+import { THIRD_PARTY_IDPROVIDER_SECRET_NAME, DOMAIN_PREFIX } from '../bin/constants';
 
 
 export class InfrastructureStack extends cdk.Stack {
@@ -19,15 +19,30 @@ export class InfrastructureStack extends cdk.Stack {
     super(scope, id, props);
 
     // Lambda@edge handlers start//
+    const lambdaRole = new iam.Role(this, 'EdgeFunctionRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+    });
+  
+    lambdaRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: [`arn:aws:secretsmanager:*:*:secret:cognitoClientSecrets*`],
+      })
+    );
+    lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
+    
     const viewerRequest = new cloudfront.experimental.EdgeFunction(this, 'viewerRequest', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'viewerRequest.handler',
       code: lambda.Code.fromAsset('lambda/viewerRequest'),
+      role: lambdaRole
     });
     const originRequest = new cloudfront.experimental.EdgeFunction(this, 'originRequest', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'originRequest.handler',
       code: lambda.Code.fromAsset('lambda/originRequest'),
+      role: lambdaRole
     });
 
     
@@ -153,7 +168,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     const userPoolDomain = userPool.addDomain('hostedDomain', {
       cognitoDomain: {
-        domainPrefix: 'example',
+        domainPrefix: DOMAIN_PREFIX,
       }
     });
 
@@ -185,26 +200,11 @@ export class InfrastructureStack extends cdk.Stack {
         ClientID: SecretValue.unsafePlainText(userPoolClient.userPoolClientId),
         ClientSecret: userPoolClient.userPoolClientSecret,
         DomainName: SecretValue.unsafePlainText(userPoolDomain.domainName),
-        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId)
+        UserPoolID: SecretValue.unsafePlainText(userPool.userPoolId),
+        DistributionDomainName: SecretValue.unsafePlainText(cfDistro.distributionDomainName)
       },
     })
-    const readSecretsPolicy = new iam.PolicyStatement({
-      actions: ['secretsmanager:GetSecretValue'],
-      resources: [secret.secretArn], // This secret should already be present
-    });
 
-    viewerRequest.role?.attachInlinePolicy(
-      new iam.Policy(this, 'add-secret-viewer-policy', {
-        statements: [readSecretsPolicy],
-      }),
-    );
-
-    originRequest.role?.attachInlinePolicy(
-      new iam.Policy(this, 'add-secret-origin-policy', {
-        statements: [readSecretsPolicy],
-      }),
-    );
-    
     const thirdPardyIdsSecret = secretsmanager.Secret.fromSecretNameV2(
       this,
       THIRD_PARTY_IDPROVIDER_SECRET_NAME,
