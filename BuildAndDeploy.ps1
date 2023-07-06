@@ -37,9 +37,6 @@ function deploySecretsOnly {
   cdk synth
   cdk bootstrap
   cdk deploy
-}
-
-function GoUp(){
   cd ../
 }
 
@@ -63,7 +60,6 @@ function all {
   build
   deploySecretsOnly
   awaitUserConfirmation
-  GoUp
   deployMainStack
 }
 

@@ -39,10 +39,9 @@ SecretsOnly() {
   cdk synth
   cdk bootstrap
   cdk deploy
+  cd ../
 }
-GoUp(){
-   cd ../
-}
+
 MainStack() {
   cd cloudfront-cognito-stack
   cdk synth
@@ -63,7 +62,6 @@ all() {
   build
   SecretsOnly
   awaitUserConfirmation
-  GoUp
   MainStack
 
 }
