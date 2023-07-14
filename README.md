@@ -16,62 +16,34 @@ Prereqs:
 
 ## Target Technology Stack and File Locations
 ### Infrastructure (Typescript)
-Any infrastructure changes occur within the `lib/InfrastructureStack.ts` file. This creates:
+Any infrastructure changes occur within the `cloudfront-cognito-stack/` directory. This creates:
 * Hosted UI login page
 * Cloudfront
 * WAF and Shield
 
+There is an additional stack within the `pre-cloudfront-cognito-stack/` directory that is used to deploy Secrets Manager prior to the main stack deployment. This is used if you would like support for Google and Facebook authentication.
+
 ### Lambda (ViewerRequest, OriginRequest and Premium_Lambda)
-All lambda code functions out of the box and can be found within `lambda/` directory
+All lambda code can be found within `cloudfront-cognito-stack/lambda/` directory
 
 ### Example Static Website in S3 behind Cloudfront
 This pattern includes an example Angular website just to highlight how an s3 website would be hosted behind AWS Cloudfront and to show how AWS Cognito Hosted UI can redirect to any domain of your choosing.
 
 ## How to Deploy
 
-There is a Makefile that will build the AWS Lambdas and static website and deploy to your AWS environment.
-* `make build` – builds lambdas `npm i` and builds static website code `ng build --configuration=production`
-* `make deploy` – cdk deploy
-* `make` – builds the entire stack and deploys to AWS.
+There are scripts provided for both Windows and Linux machines. To start the deployment process:
+- run `chmod +x ./BuildAndDeploy.sh`
 
-### First deployment
-The first time you deploy your code, you will need to:
-* `cdk synth`
-* `cdk bootstrap`
-* `Make`
+### Deploy the pre-stack (Secrets Manager)
+There is a provided script called `BuildAndDeploy` for deploying the entire stack. To build and deploy, simply run `./BuildAndDeploy.sh all`. This make command will run `npm i` in all of the lambda directories to ensure their dependencies are present before deploying. It will also build the static site, built in angular, by running `ng build --configuration=production`. 
 
-### All following deployments
-* `make`
+After building the project, the script will deploy an AWS Secrets Manager called `thirdPartyProviders`. This secret contains client credentials for Amazon Cognito to use to authenticate users with their Facebook or Google credentials. If you want this feature supported, you will need to generate client credentials with these providers and then update the secret values within AWS Secrets Manager. Instructions on how to generate credentials can be found here: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-configuring-federation-with-social-idp.html
 
-## How to Deploy and Test
-
-### Deploy the stack
-There is a provided Makefile for building the static website and the lambdas. To build and deploy, simply run `make`. This make command will run `npm i` in all of the lambda directories to ensure their dependencies are present for deploy. It will also build the static site, built in angular, by running `ng build --configuration=production`. After building, the makefile will run cdk deploy to push your stack into AWS.
-
-All future deployments can be run by simply running: `make`
-
-### Update Secrets
-Once your stack is deployed, navigate to Cognito clients and update secrets manager with the ClientID and ClientSecret. Within the same UI, under User Pools you can find the Facebook and Google client credentials.
-
-You’ll see in our repo, we’re referencing the Secret “chatnonymousSecrets“
-Here is a comprenehsive list of secret keys and where their values can be found:
-
-* ClientID - Amazon Cognito → User pools → chatnonymous-user-pool → App client: userpoolClient<id-from-cdk>
-* ClientSecret - Amazon Cognito → User pools → chatnonymous-user-pool → App client: userpoolClient<id-from-cdk>
-* DomainName - chatnonymous
-* UserPoolID - Amazon Cognito → User pools
-* FacebookAppId 
-* FacebookAppSecret
-* GoogleAppId
-* GoogleAppSecret
-
-All Facebook / Google credentials can be found at:
-* Amazon Cognito → User pools → chatnonymous-user-pool → App client: userpoolClient<id-from-cdk> → Hosted UI → Edit
-
-Navigate to Secrets Manager and select the secret `chatnonymousSecret`. Populate the above values within that secret.
+### Deploy the Main Stack
+After you have updated the secret, the script should be waiting for your input. Go back to your terminal and enter `Y` and hit enter. The script will then take roughly 10 minutes to deploy the full solution.
 
 ### View HostedUI
-Navigate to Cloudfront and grab the domain name listed next to your distribution. You should be redirected to a URL like: `https://chatnonymous.auth.us-east-1.amazoncognito.com/login?response_type=code&client_id…` This is your hosted_UI and you can now begin signing up, logging in and checking JWT tokens!
+Navigate to Cloudfront and grab the domain name listed next to your distribution. You should be redirected to a URL like: `https://example.auth.us-east-1.amazoncognito.com/login?response_type=code&client_id…` This is your hosted_UI and you can now begin signing up, logging in and checking JWT tokens!
 
 ### Add a Premium user
 Once you have a user added to your User Pool, you can add that user to a premium user group via the premium lambda. To test this, navigate to API Gateway and click on the api titled `AddUsertoPremiumUserGroup` and you can create a test event. This api takes just 1 parameter, username. 
@@ -82,15 +54,7 @@ Once you have a user added to your User Pool, you can add that user to a premium
 ```
 
 ## How to redirect to your own website
-This solution includes an example angular static website, hosted in s3 behind cloudfront. The website code is stored under `static-site`. If you want to use your own code, you need to do a few things:
-* Within Makefile, edit the website path and any build commands needed.
+This solution includes an example angular static website, hosted in s3 behind cloudfront. The website code is stored under `cloudfront-cognito-stack/static-site`. If you want to use your own code, you need to do a few things:
+* Within BuildAndDeploy scripts, edit the website path and any build commands needed.
 
-* Within `lib/json_schema_validator-stack.ts`, you will need to edit the `s3deploy.BucketDeployment` source to be where your website compiled code lives. There are comments within this file that specify how to do this.
-## Useful commands for local development
-
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+* Within `cloudfront-cognito-stack/lib/InfrastructureStack.ts`, you will need to edit the `s3deploy.BucketDeployment` source to be where your website compiled code lives. There are comments within this file that specify how to do this.
