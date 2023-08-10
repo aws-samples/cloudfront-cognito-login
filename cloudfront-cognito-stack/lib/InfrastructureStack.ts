@@ -5,6 +5,7 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption } from 'aws-cdk-lib/aws-s3';
@@ -160,8 +161,13 @@ export class InfrastructureStack extends cdk.Stack {
         }
       },
       passwordPolicy: {
-        minLength: 6
+        minLength: 8, // Minimum password length
+        requireUppercase: true, // Require at least one uppercase letter
+        requireLowercase: true, // Require at least one lowercase letter
+        requireDigits: true, // Require at least one digit
+        requireSymbols: true, // Require at least one special character
       },
+      advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
@@ -272,6 +278,11 @@ export class InfrastructureStack extends cdk.Stack {
       }),
     );
 
+    // Create a log group for access logs
+    const accessLogGroup = new logs.LogGroup(this, 'MyAccessLogGroup', {
+      retention: logs.RetentionDays.ONE_MONTH, // Set the retention period for logs (adjust as needed)
+    });
+    
     // Create api gateway with the lambda function as the endpoint
     const api = new apigw.LambdaRestApi(this, 'AddUserToPremiumEndpoint1', {
       handler: addPremiumUserFunction,
@@ -281,6 +292,12 @@ export class InfrastructureStack extends cdk.Stack {
         allowHeaders : ['*'],
         allowMethods: [ 'POST']
       },
+      deployOptions: {
+        accessLogDestination: new apigw.LogGroupLogDestination(accessLogGroup), 
+        accessLogFormat: apigw.AccessLogFormat.jsonWithStandardFields(),
+        loggingLevel: apigw.MethodLoggingLevel.INFO, // Adjust the logging level as needed
+        dataTraceEnabled: true
+      }
     });
   }
 }
