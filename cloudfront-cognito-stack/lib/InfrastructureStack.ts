@@ -13,6 +13,7 @@ import { OriginAccessIdentity, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-clou
 import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { THIRD_PARTY_IDPROVIDER_SECRET_NAME, DOMAIN_PREFIX } from '../bin/constants';
+import { CfnWebACLAssociation } from 'aws-cdk-lib/aws-wafv2';
 
 
 export class InfrastructureStack extends cdk.Stack {
@@ -282,6 +283,36 @@ export class InfrastructureStack extends cdk.Stack {
     const accessLogGroup = new logs.LogGroup(this, 'MyAccessLogGroup', {
       retention: logs.RetentionDays.ONE_MONTH, // Set the retention period for logs (adjust as needed)
     });
+    const apiGwWebAcl = new wafv2.CfnWebACL(this, 'ApiGwAcl', {
+      defaultAction: { 
+        allow: {}
+      },
+      scope: 'REGIONAL', // You can adjust the scope as needed
+      visibilityConfig: {
+        cloudWatchMetricsEnabled: true,
+        metricName: 'ApiGwAclMetrics',
+        sampledRequestsEnabled: true,
+      },    
+      rules: [{
+        name: 'CRSRule',
+        priority: 0,
+        statement: {
+          managedRuleGroupStatement: {
+            name: 'AWSManagedRulesAmazonIpReputationList',
+            vendorName: 'AWS'
+          }
+        },
+        visibilityConfig: {
+          cloudWatchMetricsEnabled: true,
+          metricName: 'MetricForApiGwAcl-CRS',
+          sampledRequestsEnabled: true,
+        },
+        overrideAction: {
+          none: {}
+        },
+      }]
+    });
+
     
     // Create api gateway with the lambda function as the endpoint
     const api = new apigw.LambdaRestApi(this, 'AddUserToPremiumEndpoint1', {
@@ -298,6 +329,10 @@ export class InfrastructureStack extends cdk.Stack {
         loggingLevel: apigw.MethodLoggingLevel.INFO, // Adjust the logging level as needed
         dataTraceEnabled: true
       }
+    });
+    const apiWebAclAssociation = new CfnWebACLAssociation(this, 'ApiWebAclAssociation', {
+      resourceArn: api.deploymentStage.stageArn,
+      webAclArn: apiGwWebAcl.attrArn,
     });
   }
 }
