@@ -191,6 +191,7 @@ export class InfrastructureStack extends cdk.Stack {
       authFlows: {
         userPassword: true
       },
+      supportedIdentityProviders:[cognito.UserPoolClientIdentityProvider.FACEBOOK,cognito.UserPoolClientIdentityProvider.GOOGLE,cognito.UserPoolClientIdentityProvider.COGNITO],
       generateSecret: true,
       preventUserExistenceErrors: true,
       refreshTokenValidity: Duration.days(30),
@@ -279,10 +280,6 @@ export class InfrastructureStack extends cdk.Stack {
       }),
     );
 
-    // Create a log group for access logs
-    const accessLogGroup = new logs.LogGroup(this, 'MyAccessLogGroup', {
-      retention: logs.RetentionDays.ONE_MONTH, // Set the retention period for logs (adjust as needed)
-    });
     const apiGwWebAcl = new wafv2.CfnWebACL(this, 'ApiGwAcl', {
       defaultAction: { 
         allow: {}
@@ -322,12 +319,6 @@ export class InfrastructureStack extends cdk.Stack {
         allowOrigins : [`https://${cfDistro.distributionDomainName}`],
         allowHeaders : ['*'],
         allowMethods: [ 'POST']
-      },
-      deployOptions: {
-        accessLogDestination: new apigw.LogGroupLogDestination(accessLogGroup), 
-        accessLogFormat: apigw.AccessLogFormat.jsonWithStandardFields(),
-        loggingLevel: apigw.MethodLoggingLevel.INFO, // Adjust the logging level as needed
-        dataTraceEnabled: true
       }
     });
     const apiWebAclAssociation = new CfnWebACLAssociation(this, 'ApiWebAclAssociation', {
