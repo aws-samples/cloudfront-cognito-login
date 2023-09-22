@@ -8,6 +8,7 @@ import { HeaderComponent } from 'src/components/header/header.component';
 import { HomePageComponent } from 'src/components/home-page/home-page.component';
 import { PremiumContentComponent } from 'src/components/premium-content/premium-content.component';
 import { RegularContentComponent } from 'src/components/regular-content/regular-content.component';
+import { HttpClientModule } from '@angular/common/http';
 
 
 @NgModule({
@@ -21,7 +22,8 @@ import { RegularContentComponent } from 'src/components/regular-content/regular-
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,16 +1,22 @@
+<div class="header">
+    <a routerLink="" class="logo">Example Website</a>
+    <div class="header-right">
+      <a class="active space" href="index.html" *ngIf="!loggedIn">Login</a>
+      <a class="active space" (click)="this.logout()" *ngIf="loggedIn">Logout</a>
+    </div>
+  </div>
 <body>
-    <div class="side-by-side-container">
-
-        <!-- NG if to toggle based on premium -->
+    <div class="side-by-side-container" *ngIf="isLoggedIn">
         <div class="left">
             <h2>Regular Content</h2>
             <p>If you are seeing this, the authenticated user has regular content. <br>
             This is based off their Cognito User Groups</p>
         </div>
-        <div class="Right" *ngIf="isPremium">
-            <h2>Premium Content</h2>
-            <p>If you are seeing this, the authenticated user has premium content. <br>
-                This is based off their Cognito User Groups</p>
+    </div>
+    <div *ngIf="!isLoggedIn" class="logIn">
+        <div>
+            <h2>You are not logged in.</h2>
         </div>
     </div>
+    
 </body>

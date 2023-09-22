@@ -6,7 +6,10 @@ exports.handler = (event, context, callback) => {
 
   var premiumGroupName = process.env.premiumGroupName
   var username = event.username
-
+  if(username == "" || username == undefined){
+    var body = JSON.parse(event.body, undefined, 2)
+    username = body.username
+  }
   var params = {
     GroupName: premiumGroupName,
     UserPoolId: process.env.cognitoUserPoolId,
