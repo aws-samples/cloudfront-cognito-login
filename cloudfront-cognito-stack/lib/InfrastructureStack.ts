@@ -14,6 +14,7 @@ import { aws_wafv2 as wafv2 } from 'aws-cdk-lib';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { THIRD_PARTY_IDPROVIDER_SECRET_NAME, DOMAIN_PREFIX } from '../bin/constants';
 import { CfnWebACLAssociation } from 'aws-cdk-lib/aws-wafv2';
+import { HttpStatusCode } from 'axios';
 
 
 export class InfrastructureStack extends cdk.Stack {
@@ -108,7 +109,12 @@ export class InfrastructureStack extends cdk.Stack {
     // AWS WAF End //
 
     // AWS CloudFront Start //
-
+    const errorResponse: cloudfront.ErrorResponse = {
+      httpStatus: 404,
+      responseHttpStatus: 200,
+      responsePagePath: '/error.html',
+      ttl: cdk.Duration.minutes(30),
+    };
     const cfDistro = new cloudfront.Distribution(this, 'example', {
       defaultBehavior: {
         origin: new cdk.aws_cloudfront_origins.S3Origin(staticSiteBucket,{
@@ -134,7 +140,8 @@ export class InfrastructureStack extends cdk.Stack {
       enableLogging: true,
       logIncludesCookies: true,
       logFilePrefix: 'cloudfront-logs',
-      defaultRootObject: 'index.html'
+      defaultRootObject: 'index.html',
+      errorResponses: [errorResponse]
     })
 
 
@@ -258,7 +265,7 @@ export class InfrastructureStack extends cdk.Stack {
 
     // Add Lambda function that will add user to the premium group
     const addPremiumUserFunction = new lambda.Function(this, 'addPremiumUserFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'addPremiumUser.handler',
       code: lambda.Code.fromAsset('lambda/premium_endpoint'),
       environment: {
@@ -310,7 +317,7 @@ export class InfrastructureStack extends cdk.Stack {
       }]
     });
 
-    
+
     // Create api gateway with the lambda function as the endpoint
     const api = new apigw.LambdaRestApi(this, 'AddUserToPremiumEndpoint1', {
       handler: addPremiumUserFunction,
@@ -319,8 +326,13 @@ export class InfrastructureStack extends cdk.Stack {
         allowOrigins : [`https://${cfDistro.distributionDomainName}`],
         allowHeaders : ['*'],
         allowMethods: [ 'POST']
-      }
+      },
+      defaultMethodOptions: {
+        authorizationType: apigw.AuthorizationType.IAM,
+      }  
     });
+    api.root.addMethod("POST");
+    
     const apiWebAclAssociation = new CfnWebACLAssociation(this, 'ApiWebAclAssociation', {
       resourceArn: api.deploymentStage.stageArn,
       webAclArn: apiGwWebAcl.attrArn,
