@@ -1,4 +1,5 @@
 # Cloudfront Cognito Login
+![ArchitectureDiagram](./diagram.png)
 
 This pattern utilizes Cognito, Cloudfront, Lambda@Edge, WAF and S3 to implement a HostedUI login page for your web page. Users can login/sign-up using email, Google or Facebook and, upon login, are redirected to a website with a JWT token passed. This pattern also includes a Lambda based API behind API Gateway that can be used to add users to a premium user group. The entire stack can be deployed using CDK.
 
